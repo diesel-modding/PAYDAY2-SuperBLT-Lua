@@ -4,6 +4,14 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.4.1
+
+- Updated Russian localization (HarGabt)
+- Updated Polish localization (Patriot)
+- Updated Czech localization (vojin154)
+- Fixed minor code oversights
+- Fixed Hooks:Remove not working
+
 ## v1.4.0
 
 - Fixed some utility functions that were using outdated code
