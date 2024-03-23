@@ -21,11 +21,18 @@ end
 ---@param func function @The function to call with the hook
 function Hooks:AddHook(key, id, func)
 	self._registered_hooks[key] = self._registered_hooks[key] or {}
-	-- Keeping the table structure here for backward compatibility
-	self._registered_hooks[key][id] = {
+	-- Update existing hook
+	for k, v in pairs(self._registered_hooks[key]) do
+		if type(v) == "table" and v.id == id then
+			v.func = func
+			return
+		end
+	end
+	-- Add new hook, if id doesn't exist
+	table.insert(self._registered_hooks[key], {
 		id = id,
 		func = func
-	}
+	})
 end
 
 ---Adds a function call to a hook, so that it will be called when the hook is called  
@@ -55,7 +62,12 @@ end
 function Hooks:Remove(id)
 	for k, v in pairs(self._registered_hooks) do
 		if type(v) == "table" then
-			v[id] = nil
+			for i, tbl in pairs(v) do
+				if tbl.id == id then
+					table.remove(v, i)
+					break
+				end
+			end
 		end
 	end
 end
