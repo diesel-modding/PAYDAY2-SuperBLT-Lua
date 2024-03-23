@@ -21,19 +21,11 @@ end
 ---@param func function @The function to call with the hook
 function Hooks:AddHook(key, id, func)
 	self._registered_hooks[key] = self._registered_hooks[key] or {}
-	-- Update existing hook
-	for k, v in pairs(self._registered_hooks[key]) do
-		if v.id == id then
-			v.func = func
-			return
-		end
-	end
-	-- Add new hook, if id doesn't exist
-	local tbl = {
+	-- Keeping the table structure here for backward compatibility
+	self._registered_hooks[key][id] = {
 		id = id,
 		func = func
 	}
-	table.insert(self._registered_hooks[key], tbl)
 end
 
 ---Adds a function call to a hook, so that it will be called when the hook is called  
@@ -63,11 +55,7 @@ end
 function Hooks:Remove(id)
 	for k, v in pairs(self._registered_hooks) do
 		if type(v) == "table" then
-			for x, y in pairs(v) do
-				if y.id == id then
-					y = nil
-				end
-			end
+			v[id] = nil
 		end
 	end
 end
@@ -81,10 +69,8 @@ function Hooks:Call(key, ...)
 	end
 
 	for k, v in pairs(self._registered_hooks[key]) do
-		if v then
-			if type(v.func) == "function" then
-				v.func(...)
-			end
+		if type(v) == "table" and type(v.func) == "function" then
+			v.func(...)
 		end
 	end
 end
@@ -99,12 +85,10 @@ function Hooks:ReturnCall(key, ...)
 	end
 
 	for k, v in pairs(self._registered_hooks[key]) do
-		if v then
-			if type(v.func) == "function" then
-				local r = { v.func(...) }
-				if next(r) == 1 then
-					return unpack(r)
-				end
+		if type(v) == "table" and type(v.func) == "function" then
+			local r = { v.func(...) }
+			if next(r) == 1 then
+				return unpack(r)
 			end
 		end
 	end
