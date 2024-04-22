@@ -230,19 +230,19 @@ end
 
 ---@deprecated @Use `NetworkHelper:VectorToString` instead
 function Vector3.ToString(v)
-	BLT:Log(LogLevel.WARN, "Vector3.ToString is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("Vector3.ToString")
 	return NetworkHelper:Vector3ToString(v)
 end
 
 ---@deprecated @Use `NetworkHelper:StringToVector` instead
 function string.ToVector3(string)
-	BLT:Log(LogLevel.WARN, "string.ToVector3 is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("string.ToVector3")
 	return NetworkHelper:StringToVector3(string)
 end
 
 ---@deprecated @Use `json.encode` instead
 function NetworkHelper:TableToString(tbl)
-	BLT:Log(LogLevel.WARN, "LuaNetworking.TableToString is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("LuaNetworking.TableToString")
 	local str = ""
 	for k, v in pairs(tbl) do
 		if str ~= "" then
@@ -255,7 +255,7 @@ end
 
 ---@deprecated @Use `json.decode` instead
 function NetworkHelper:StringToTable(str)
-	BLT:Log(LogLevel.WARN, "LuaNetworking.StringToTable is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("LuaNetworking.StringToTable")
 	local tbl = {}
 	local tblPairs = string.split(str, "[,]")
 	for k, v in pairs(tblPairs) do

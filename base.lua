@@ -74,6 +74,11 @@ function BLT:Log(level, ...)
 	log(table.concat(out, " "))
 end
 
+function BLT:DeprecationWarning(name, level)
+	local info = debug.getinfo(level or 3, "Sl")
+	BLT:Log(LogLevel.WARN, string.format("%s is deprecated and will be removed in a future version of SuperBLT (%s:%s)", name, info.source, info.currentline))
+end
+
 -- BLT base functions
 function BLT:Initialize()
 	-- Create hook tables

@@ -79,22 +79,22 @@ end
 NotificationsManager = NotificationsManager or {}
 
 function NotificationsManager:GetNotifications()
-	BLT:Log(LogLevel.WARN, "NotificationsManager.GetNotifications is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.GetNotifications")
 	return BLT.Notifications:get_notifications()
 end
 
 function NotificationsManager:GetCurrentNotification()
-	BLT:Log(LogLevel.WARN, "NotificationsManager.GetCurrentNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.GetCurrentNotification")
 	return BLT.Notifications:get_notifications()[1]
 end
 
 function NotificationsManager:GetCurrentNotificationIndex()
-	BLT:Log(LogLevel.WARN, "NotificationsManager.GetCurrentNotificationIndex is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.GetCurrentNotificationIndex")
 	return 1
 end
 
 function NotificationsManager:AddNotification(id, title, message, priority, callback)
-	BLT:Log(LogLevel.WARN, "NotificationsManager.AddNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.AddNotification")
 	self._legacy_ids = self._legacy_ids or {}
 	local new_id = BLT.Notifications:add_notification({
 		title = title,
@@ -105,14 +105,14 @@ function NotificationsManager:AddNotification(id, title, message, priority, call
 end
 
 function NotificationsManager:UpdateNotification(id, new_title, new_message, new_priority, new_callback)
-	BLT:Log(LogLevel.WARN, "NotificationsManager.UpdateNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.UpdateNotification")
 	self._legacy_ids = self._legacy_ids or {}
 	self:RemoveNotification(id)
 	self:AddNotification(id, new_title, new_message, new_priority, new_callback)
 end
 
 function NotificationsManager:RemoveNotification(id)
-	BLT:Log(LogLevel.WARN, "NotificationsManager.RemoveNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.RemoveNotification")
 	self._legacy_ids = self._legacy_ids or {}
 	if self._legacy_ids[id] then
 		BLT.Notifications:remove_notification(self._legacy_ids[id])
@@ -121,7 +121,7 @@ function NotificationsManager:RemoveNotification(id)
 end
 
 function NotificationsManager:ClearNotifications()
-	BLT:Log(LogLevel.WARN, "NotificationsManager.ClearNotifications is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.ClearNotifications")
 	self._legacy_ids = self._legacy_ids or {}
 	for id, new_id in pairs(self._legacy_ids) do
 		BLT.Notifications:remove_notification(new_id)
@@ -129,23 +129,23 @@ function NotificationsManager:ClearNotifications()
 end
 
 function NotificationsManager:NotificationExists(id)
-	BLT:Log(LogLevel.WARN, "NotificationsManager.NotificationExists is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.NotificationExists")
 	self._legacy_ids = self._legacy_ids or {}
 	return self._legacy_ids[id] ~= nil
 end
 
 function NotificationsManager:ShowNextNotification(suppress_sound)
-	BLT:Log(LogLevel.ERROR, "NotificationsManager.ShowNextNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.ShowNextNotification")
 end
 
 function NotificationsManager:ShowPreviousNotification(suppress_sound)
-	BLT:Log(LogLevel.ERROR, "NotificationsManager.ShowPreviousNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.ShowPreviousNotification")
 end
 
 function NotificationsManager:ClickNotification(suppress_sound)
-	BLT:Log(LogLevel.ERROR, "NotificationsManager.ClickNotification is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.ClickNotification")
 end
 
 function NotificationsManager:MarkNotificationAsRead(id)
-	BLT:Log(LogLevel.ERROR, "NotificationsManager.MarkNotificationAsRead is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("NotificationsManager.MarkNotificationAsRead")
 end

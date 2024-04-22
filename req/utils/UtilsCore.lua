@@ -366,7 +366,7 @@ end
 
 ---@deprecated @Use hooks or manual cloning instead
 function _G.CloneClass(class)
-	BLT:Log(LogLevel.WARN, "CloneClass is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("CloneClass")
 	if not class.orig then
 		class.orig = clone(class)
 	end
@@ -374,18 +374,18 @@ end
 
 ---@deprecated @Use `Utils.PrintTable` instead
 function _G.PrintTable(...)
-	BLT:Log(LogLevel.WARN, "PrintTable is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("PrintTable")
 	return Utils.PrintTable(...)
 end
 
 ---@deprecated @Use `Utils.SaveTable` instead
 function _G.SaveTable(...)
-	BLT:Log(LogLevel.WARN, "SaveTable is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("SaveTable")
 	return Utils.SaveTable(...)
 end
 
 ---@deprecated @Use `string.split` instead
 function string.blt_split(str, delim, max_num)
-	BLT:Log(LogLevel.WARN, "string.blt_split is deprecated and will be removed in a future version\n" .. debug.traceback())
+	BLT:DeprecationWarning("string.blt_split")
 	return string.split(str, delim, true, max_num)
 end
