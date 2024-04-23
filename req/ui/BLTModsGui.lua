@@ -447,6 +447,10 @@ function BLTModsGui:mouse_wheel_down(x, y)
 	end
 end
 
+function BLTModsGui:input_focus()
+	return self._searchbox and self._searchbox:input_focus() or 1
+end
+
 Hooks:Add("BLTOnSaveData", "BLTOnSaveData.BLTModsGui", function(save_data)
 	-- Special case - if the user never entered the BLT mod manager but changed BLT settings via mod options menu
 	-- the data for BLTModsGui is not set from the save data, so only save mods gui data when it has been opened before
