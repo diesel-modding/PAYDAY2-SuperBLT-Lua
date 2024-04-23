@@ -11,15 +11,8 @@ BLTModsGui.show_mod_icons = true
 BLTModsGui.save_data_loaded = false
 
 local padding = 10
-
-local massive_font = tweak_data.menu.pd2_massive_font
 local large_font = tweak_data.menu.pd2_large_font
-local medium_font = tweak_data.menu.pd2_medium_font
-local small_font = tweak_data.menu.pd2_small_font
-
-local massive_font_size = tweak_data.menu.pd2_massive_font_size
 local large_font_size = tweak_data.menu.pd2_large_font_size
-local medium_font_size = tweak_data.menu.pd2_medium_font_size
 local small_font_size = tweak_data.menu.pd2_small_font_size
 
 local function make_fine_text(text)
@@ -229,6 +222,15 @@ function BLTModsGui:_setup()
 		end
 	}
 
+	-- Set up search box
+	if SearchBoxGuiObject then
+		self._searchbox = SearchBoxGuiObject:new(self._panel, self._ws)
+		self._searchbox.panel:set_x(10)
+		self._searchbox.panel:set_y(back_button:y())
+
+		self._searchbox:register_callback(callback(self, self, "update_visible_mods", false))
+	end
+
 	-- Mods scroller
 	local scroll_panel = self._panel:panel({
 		h = self._panel:h() - large_font_size * 2 - padding * 2,
@@ -239,7 +241,7 @@ function BLTModsGui:_setup()
 	self:update_visible_mods(BLTModsGui.last_y_position)
 end
 
-function BLTModsGui:update_visible_mods(scroll_position)
+function BLTModsGui:update_visible_mods(scroll_position, search_list, search_text)
 	-- Update the show libraries and mod icons button
 	self._libraries_show_button:set_visible(not BLTModsGui.show_libraries)
 	self._libraries_hide_button:set_visible(BLTModsGui.show_libraries)
@@ -295,7 +297,7 @@ function BLTModsGui:update_visible_mods(scroll_position)
 
 	-- Create mod boxes
 	for _, mod in ipairs(mods) do
-		if BLTModsGui.show_libraries or not mod:IsLibrary() then
+		if (BLTModsGui.show_libraries or not mod:IsLibrary()) and (string.is_nil_or_empty(search_text) or mod:GetName():lower():find(search_text)) then
 			local i = #self._buttons + 1
 
 			-- Wrap mods around the download button, if mod icons are disabled
@@ -347,6 +349,10 @@ function BLTModsGui:mouse_moved(button, x, y)
 		end
 	end
 
+	if self._searchbox and not used then
+		used, pointer = self._searchbox:mouse_moved(button, x, y)
+	end
+
 	local inside_scroll = alive(self._scroll) and self._scroll:panel():inside(x, y)
 	for _, item in ipairs(self._buttons) do
 		if not used and item:inside(x, y) and inside_scroll then
@@ -380,11 +386,16 @@ function BLTModsGui:mouse_pressed(button, x, y)
 	end
 
 	local result
-	if alive(self._scroll) then
+
+	if self._searchbox then
+		result = self._searchbox:mouse_pressed(button, x, y)
+	end
+
+	if alive(self._scroll) and not result then
 		result = self._scroll:mouse_pressed(button, x, y)
 	end
 
-	if button == Idstring("0") then
+	if button == Idstring("0") and not result then
 		for button, data in pairs(self._custom_buttons) do
 			if alive(button) and button:visible() and button:inside(x, y) then
 				return data.clbk()
