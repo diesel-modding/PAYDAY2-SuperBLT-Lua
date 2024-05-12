@@ -4,6 +4,11 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.4.3
+- Improved networking utility functions
+- Added network receive hooks
+- Added search box to BLT mod list
+
 ## v1.4.2
 
 - Fixed an oversight with the previous update
