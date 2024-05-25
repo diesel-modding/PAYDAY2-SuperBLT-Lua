@@ -140,7 +140,7 @@ end
 function NetworkHelper:RemoveReceiveHookByMessageId(hook_id, message_id)
 	for i, v in pairs(self._receive_hooks[message_id] or {}) do
 		if v.id == hook_id then
-			table.remove(hooks, i)
+			table.remove(self._receive_hooks[message_id], i)
 			break
 		end
 	end
