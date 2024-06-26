@@ -57,23 +57,23 @@ function MenuHelper:AddBackButton(menu_id)
 	MenuManager:add_back_button(menu)
 end
 
+---@class menu_item_data
+---@field menu_id string @Menu identifier of the menu to create this item on
+---@field id string? @Unique identifier for this item
+---@field title string @Title of the item, treated as localization key unless `localized` is set to `false`
+---@field desc string? @Description of the item, treated as localization key unless `localized` is set to `false`
+---@field disabled boolean? @Wether this item should be disabled, defaults to `false`
+---@field disabled_color Color? @Color of the item when disabled, defaults to `Color(0.25, 1, 1, 1)`
+---@field localized boolean? @Wether `title` and `desc` are treated as localization keys, defaults to `true`
+---@field priority number? @Sorting order of the item in the menu
+---@field callback string? @Function on `MenuCallbackHandler` to call when the item is changed
+
+---@class button_data: menu_item_data
+---@field next_node string? @Menu identifier of the menu to switch to when the item is clicked
+---@field back_callback string? @Function on `MenuCallbackHandler` to call when the menu of the item is left
+
 ---Adds a button to the menu specified in `button_data`
----@param button_data table @Settings for the button to be added
----```lua
----button_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	title = "My button",
----	desc = "My button description",
----	next_node = "next_menu_id",
----	back_callback = "back_callback_func",
----	callback = "changed_callback_func",
----	disabled = false,
----	disabled_color = Color(0.25, 1, 1, 1),
----	localized = true,
----	priority = 1
----}
----```
+---@param button_data button_data @Settings for the button to be added
 ---@return table @The created menu item
 function MenuHelper:AddButton(button_data)
 	local data = {
@@ -106,27 +106,26 @@ function MenuHelper:AddButton(button_data)
 	return item
 end
 
+---@class divider_data: menu_item_data
+---@field size number? @The size of the item, defaults to `8`
+---@field no_text boolean? @Wether to display the divider as empty space, defaults to `true`
+
 ---Adds a divider to the menu specified in `divider_data`
----@param divider_data table @Settings for the divider to be added
----```lua
----divider_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	size = 8,
----	no_text = true,
----	priority = 1
----}
----```
+---@param divider_data divider_data @Settings for the divider to be added
 ---@return any @The created menu item
 function MenuHelper:AddDivider(divider_data)
 	local data = {
 		type = "MenuItemDivider",
 		size = divider_data.size or 8,
-		no_text = divider_data.no_text or true
+		no_text = divider_data.no_text == nil and true or divider_data.no_text
 	}
 
 	local params = {
-		name = divider_data.id
+		name = divider_data.id,
+		text_id = divider_data.title,
+		help_id = divider_data.desc,
+		localize = divider_data.localized,
+		localize_help = divider_data.localized
 	}
 
 	local menu = self:GetMenu(divider_data.menu_id)
@@ -138,22 +137,12 @@ function MenuHelper:AddDivider(divider_data)
 	return item
 end
 
+---@class toggle_data: menu_item_data
+---@field value boolean? @The initial value of the item, defaults to `false`
+---@field icon_by_text boolean? @Wether to place the checkbox to the right of its name, defaults to `false`
+
 ---Adds a toggle button to the menu specified in `toggle_data`
----@param toggle_data table @Settings for the toggle to be added
----```lua
----toggle_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	title = "My toggle",
----	desc = "My toggle description",
----	icon_by_text = false,
----	callback = "changed_callback_func",
----	disabled = false,
----	disabled_color = Color(0.25, 1, 1, 1),
----	localized = true,
----	priority = 1
----}
----```
+---@param toggle_data toggle_data @Settings for the toggle to be added
 ---@return table @The created menu item
 function MenuHelper:AddToggle(toggle_data)
 	local data = {
@@ -214,28 +203,18 @@ function MenuHelper:AddToggle(toggle_data)
 	return item
 end
 
+---@class slider_data: menu_item_data
+---@field value number @The initial value of the item
+---@field min number? @Minimum allowed value of the item, defaults to `0`
+---@field max number? @Maximum allowed value of the item, defaults to `10`
+---@field step number? @Step size when the item is changed via arrow keys, defaults to `1`
+---@field show_value boolean? @Wether to show the item value on the slider, defaults to `false`
+---@field display_precision integer? @How many numbers to show after the decimal point, defaults to `2`
+---@field display_scale number? @Value to multiply the item value with for displaying it, defaults to `1`
+---@field is_percentage boolean? @Wether to show a percentage sign next to the item value, defaults to `false`
+
 ---Adds a slider to the menu specified in `slider_data`
----@param slider_data table @Settings for the slider to be added
----```lua
----slider_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	title = "My slider",
----	desc = "My slider description",
----	min = 0,
----	max = 10,
----	step = 1,
----	show_value = false,
----	display_precision = 2,
----	display_scale = 1,
----	is_percentage = false,
----	callback = "changed_callback_func",
----	disabled = false,
----	disabled_color = Color(0.25, 1, 1, 1),
----	localized = true,
----	priority = 1
----}
----```
+---@param slider_data slider_data @Settings for the slider to be added
 ---@return table @The created menu item
 function MenuHelper:AddSlider(slider_data)
 	local data = {
@@ -275,25 +254,14 @@ function MenuHelper:AddSlider(slider_data)
 	return item
 end
 
+---@class multi_data: menu_item_data
+---@field value any? @The initial value of the item
+---@field items string[] @List of choices to display for the item
+---@field item_values any[]? @List of values for the options in `items`, defaults to the index of the choice
+---@field localized_items boolean? @Wether to treat the choices in `items` as localization keys, defaults to `true`
+
 ---Adds a multiple choice item to the menu specified in `multi_data`
----@param multi_data table @Settings for the multiple choice item to be added
----```lua
----multi_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	title = "My multi choice",
----	desc = "My multi choice description",
----	items = { "First", "Second", "Third" },
----	item_values = { 1, 2, 3 },
----	value = 1,
----	callback = "changed_callback_func",
----	disabled = false,
----	disabled_color = Color(0.25, 1, 1, 1),
----	localized = true,
----	localized_items = true,
----	priority = 1
----}
----```
+---@param multi_data multi_data @Settings for the multiple choice item to be added
 ---@return table @The created menu item
 function MenuHelper:AddMultipleChoice(multi_data)
 	local data = {
@@ -334,22 +302,13 @@ function MenuHelper:AddMultipleChoice(multi_data)
 	return item
 end
 
+---@class bind_data: menu_item_data
+---@field connection_name string @Unique identifier for the keybind
+---@field binding string? @Keyboard key that triggers this keybind
+---@field button string? @Mouse button that triggers this keybind
+
 ---Adds a customizable keybinding to the menu specified in `bind_data`
----@param bind_data table @Settings for the keybinding to be added
----```lua
----bind_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	title = "My keybinding",
----	desc = "My keybinding description",
----	connection_name = "keybind_id",
----	binding = "left shift",
----	button = "left shift",
----	callback = "changed_callback_func",
----	localized = true,
----	priority = 1
----}
----```
+---@param bind_data bind_data @Settings for the keybinding to be added
 ---@return table @The created menu item
 function MenuHelper:AddKeybinding(bind_data)
 	local data = {
@@ -379,21 +338,11 @@ function MenuHelper:AddKeybinding(bind_data)
 	return item
 end
 
+---@class inputdata: menu_item_data
+---@field value string? The initial value of the item
+
 ---Adds an input box to the menu specified in `input_data`
----@param input_data table @Settings for the input box to be added
----```lua
----input_data = {
----	menu_id = "menu_id",
----	id = "element_id",
----	title = "My input",
----	desc = "My input description",
----	callback = "changed_callback_func",
----	disabled = false,
----	disabled_color = Color(0.25, 1, 1, 1),
----	localized = true,
----	priority = 1
----}
----```
+---@param input_data inputdata @Settings for the input box to be added
 ---@return table @The created menu item
 function MenuHelper:AddInput(input_data)
 	local data = {
@@ -421,9 +370,14 @@ function MenuHelper:AddInput(input_data)
 	return item
 end
 
+---@class build_menu_data
+---@field focus_changed_callback string? @Function on `MenuCallbackHandler` to call when the menu is focused
+---@field back_callback string? @Function on `MenuCallbackHandler` to call when the menu is left
+---@field area_bg "full"|"half"|string? @How much of the menu background to show, defaults to `full`
+
 ---Sets up and returns a menu so that it can be added to the in-game menus
 ---@param menu_id string @ID of the menu to build
----@param data? table @Table containing extra data which this menu should be built with
+---@param data? build_menu_data @Table containing extra data which this menu should be built with
 ---@return table? @The built menu or `nil` if the menu could not be built
 function MenuHelper:BuildMenu(menu_id, data)
 	-- Check menu exists

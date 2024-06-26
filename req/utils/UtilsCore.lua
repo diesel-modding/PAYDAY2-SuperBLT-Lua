@@ -120,9 +120,9 @@ function Utils.DoSaveTable(tbl, cmp, fileName, fileIsOpen, preText)
 	end
 end
 
----Returns if a string exists or not
+---Returns if a string is empty or `nil`
 ---@param str string @The string to check
----@return boolean @`false` if the string is `""` or `nil`, `true` otherwise
+---@return boolean @`true` if the string is `""` or `nil`, `false` otherwise
 function string.is_nil_or_empty(str)
 	return str == "" or str == nil
 end
