@@ -121,6 +121,9 @@
 
 	"blt_no_image" : "No Image",
 	"blt_no_name" : "No Name",
-	"blt_no_desc" : "No Description"
+	"blt_no_desc" : "No Description",
+
+	"blt_default_profile_name" : "Profile $number",
+	"blt_profile_delete" : "Are you sure you want to delete the mod profile \"$profile\"?"
 
 }

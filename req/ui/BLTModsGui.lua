@@ -1,6 +1,7 @@
 BLT:Require("req/ui/BLTUIControls")
 BLT:Require("req/ui/BLTModItem")
 BLT:Require("req/ui/BLTViewModGui")
+BLT:Require("req/ui/BLTModProfileGui")
 
 ---@class BLTModsGui
 ---@field new fun(self, ws, fullscreen_ws, node):BLTModsGui
@@ -222,12 +223,15 @@ function BLTModsGui:_setup()
 		end
 	}
 
+	-- Profile Box
+	self._profilebox = BLTModProfileGui:new(self._ws, self._panel, self._panel:w() / 2, back_button:center_y())
+	self._profilebox:register_callback(callback(self, self, "update_visible_mods", false))
+
 	-- Set up search box
 	if SearchBoxGuiObject then
-		self._searchbox = SearchBoxGuiObject:new(self._panel, self._ws)
+		self._searchbox = SearchBoxGuiObject:new(self._panel, self._ws, BLTModsGui.last_search)
 		self._searchbox.panel:set_x(10)
-		self._searchbox.panel:set_y(back_button:y())
-
+		self._searchbox.panel:set_center_y(self._profilebox._panel:center_y())
 		self._searchbox:register_callback(callback(self, self, "update_visible_mods", false))
 	end
 
@@ -251,6 +255,9 @@ function BLTModsGui:update_visible_mods(scroll_position, search_list, search_tex
 
 	-- Save the position of the scroll panel
 	BLTModsGui.last_y_position = scroll_position or self._scroll:canvas():y() * -1
+
+	-- Save the last search
+	BLTModsGui.last_search = search_text or BLTModsGui.last_search or ""
 
 	-- Clear the scroll panel
 	self._scroll:canvas():clear()
@@ -297,7 +304,7 @@ function BLTModsGui:update_visible_mods(scroll_position, search_list, search_tex
 
 	-- Create mod boxes
 	for _, mod in ipairs(mods) do
-		if (BLTModsGui.show_libraries or not mod:IsLibrary()) and (string.is_nil_or_empty(search_text) or mod:GetName():lower():find(search_text)) then
+		if (BLTModsGui.show_libraries or not mod:IsLibrary()) and mod:GetName():lower():find(BLTModsGui.last_search) then
 			local i = #self._buttons + 1
 
 			-- Wrap mods around the download button, if mod icons are disabled
@@ -353,6 +360,10 @@ function BLTModsGui:mouse_moved(button, x, y)
 		used, pointer = self._searchbox:mouse_moved(button, x, y)
 	end
 
+	if self._profilebox and not used then
+		used, pointer = self._profilebox:mouse_moved(x, y)
+	end
+
 	local inside_scroll = alive(self._scroll) and self._scroll:panel():inside(x, y)
 	for _, item in ipairs(self._buttons) do
 		if not used and item:inside(x, y) and inside_scroll then
@@ -389,6 +400,10 @@ function BLTModsGui:mouse_pressed(button, x, y)
 
 	if self._searchbox then
 		result = self._searchbox:mouse_pressed(button, x, y)
+	end
+
+	if self._profilebox and not result then
+		result = self._profilebox:mouse_pressed(button, x, y)
 	end
 
 	if alive(self._scroll) and not result then

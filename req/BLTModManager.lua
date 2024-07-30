@@ -46,37 +46,113 @@ function BLTModManager:GetModOwnerOfFile(file)
 	end
 end
 
+---@param mods_list BLTMod[]
 function BLTModManager:SetModsList(mods_list)
-	-- Set mods
 	self.mods = mods_list
 
-	-- Check saved mod data
-	local mods = BLT.save_data.mods
-	if mods then
-		for i, mod in ipairs(self.mods) do
-			if mods[mod:GetId()] then
-				local data = mods[mod:GetId()]
+	self.profiles = BLT.save_data.profiles
+	if not self.profiles or #self.profiles == 0 then
+		self.profiles = {
+			{
+				mods = BLT.save_data.mods or {}
+			}
+		}
+	end
+	self.profile_index = math.min(math.max(BLT.save_data.profile_index or 1, 1), #self.profiles)
 
-				mod:SetEnabled(data.enabled, true)
-				mod:SetSafeModeEnabled(data.safe)
+	self:SwitchProfile(self.profile_index, true)
 
-				local updates = data.updates
-				if updates then
-					for update_id, enabled in pairs(updates) do
-						local update = mod:GetUpdate(update_id)
-						if update then
-							update:SetEnabled(enabled)
-						end
-					end
-				end
-			end
+	-- Setup mods
+	for _, mod in ipairs(self.mods) do
+		mod:Setup()
+	end
+end
+
+function BLTModManager:ProfileName(profile_index)
+	profile_index = profile_index or self.profile_index
+
+	return self.profiles[profile_index] and self.profiles[profile_index].name or managers.localization:text("blt_default_profile_name", { number = tostring(profile_index) })
+end
+
+function BLTModManager:SetProfileName(name, profile_index)
+	profile_index = profile_index or self.profile_index
+
+	if self.profiles[profile_index] then
+		self.profiles[profile_index].name = name
+	end
+end
+
+function BLTModManager:CreateProfile(based_on)
+	local profile = deep_clone(self.profiles[based_on or self.profile_index])
+	profile.name = nil
+	table.insert(self.profiles, profile)
+	return #self.profiles
+end
+
+function BLTModManager:SaveProfile(profile_index)
+	profile_index = profile_index or self.profile_index
+
+	local profile = self.profiles[self.profile_index]
+	if not profile.mods then
+		profile.mods = {}
+	end
+
+	for _, mod in pairs(self:Mods()) do
+		local updates = {}
+		for _, update in pairs(mod:GetUpdates()) do
+			updates[update:GetId()] = update:IsEnabled()
+		end
+
+		profile.mods[mod:GetId()] = {
+			enabled = mod:IsEnabled(),
+			safe = mod:IsSafeModeEnabled(),
+			updates = updates
+		}
+	end
+end
+
+function BLTModManager:SwitchProfile(profile_index, is_startup)
+	if profile_index < 1 or profile_index > #self.profiles then
+		return
+	end
+
+	if profile_index ~= self.profile_index then
+		self:SaveProfile()
+	end
+
+	self.profile_index = profile_index
+
+	local mods = self.profiles[self.profile_index].mods or {}
+	for _, mod in ipairs(self.mods) do
+		local data = mods[mod:GetId()]
+
+		mod:SetEnabled(not data or data.enabled, is_startup)
+		mod:SetSafeModeEnabled(data and data.safe)
+
+		for _, update in ipairs(mod:GetUpdates()) do
+			local update_enabled = data and data.updates and data.updates[update:GetId()]
+			update:SetEnabled(update_enabled == nil or update_enabled)
+		end
+	end
+end
+
+function BLTModManager:DeleteProfile(profile_index)
+	profile_index = profile_index or self.profile_index
+
+	if #self.profiles < 2 or profile_index < 1 or profile_index > #self.profiles then
+		return
+	end
+
+	if profile_index < self.profile_index then
+		self.profile_index = self.profile_index - 1
+	elseif profile_index == self.profile_index then
+		self:SwitchProfile(profile_index == 1 and 2 or profile_index - 1)
+		if profile_index == 1 then
+			self.profile_index = 1
 		end
 	end
 
-	-- Setup mods
-	for i, mod in ipairs(self.mods) do
-		mod:Setup()
-	end
+	table.remove(self.profiles, profile_index)
 end
 
 function BLTModManager:IsExcludedDirectory(directory)
@@ -176,31 +252,32 @@ function BLTModManager:clbk_got_update(update, required, reason)
 end
 
 Hooks:Add("BLTOnSaveData", "BLTOnSaveData.BLTModManager", function(save_data)
-	save_data.mods = {}
+
+	BLT.Mods:SaveProfile()
+
+	save_data.profile_index = BLT.Mods.profile_index
+	save_data.profiles = {}
+
+	for _, v in ipairs(BLT.Mods.profiles) do
+		table.insert(save_data.profiles, {
+			name = v.name,
+			mods = v.mods
+		})
+	end
 
 	-- Save a Wren-readable list of disabled mods - it doesn't have a JSON parser so it
 	-- can't load our normal file, and it needs to know what's enabled before any Lua code runs.
 	local wren_file = io.open(BLTModManager.Constants:ModManagerWrenDisabledModsFile(BLT:IsVr()), "wb")
-
-	for _, mod in pairs(BLT.Mods:Mods()) do
-		-- Save mod updates enabled data
-		local updates = {}
-		for _, update in pairs(mod:GetUpdates()) do
-			updates[update:GetId()] = update:IsEnabled()
+	if wren_file then
+		for _, mod in pairs(BLT.Mods:Mods()) do
+			if not mod:IsEnabled() then
+				wren_file:write(mod.path .. "supermod.xml" .. "\n")
+			end
 		end
-
-		save_data.mods[mod:GetId()] = {
-			enabled = mod:IsEnabled(),
-			safe = mod:IsSafeModeEnabled(),
-			updates = updates
-		}
-
-		if not mod:IsEnabled() then
-			wren_file:write(mod.path .. "supermod.xml" .. "\n")
-		end
+		wren_file:close()
+	else
+		BLT:Log(LogLevel.ERROR, "[BLT] Could not save file " .. BLTModManager.Constants:ModManagerWrenDisabledModsFile(BLT:IsVr()))
 	end
-
-	wren_file:close()
 end)
 
 --------------------------------------------------------------------------------
