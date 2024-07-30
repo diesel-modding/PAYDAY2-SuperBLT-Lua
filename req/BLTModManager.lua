@@ -159,6 +159,49 @@ function BLTModManager:IsExcludedDirectory(directory)
 	return BLTModManager.Constants.ExcludedModDirectories[directory]
 end
 
+function BLTModManager:CheckRestartNeeded()
+	local needs_restart = {}
+	for _, mod in pairs(self:Mods()) do
+		if mod.needs_restart and mod:IsEnabled() ~= mod:WasEnabledAtStart() then
+			table.insert(needs_restart, mod:GetName())
+		end
+	end
+
+	if self._restart_notification then
+		BLT.Notifications:remove_notification(self._restart_notification)
+		self._restart_notification = nil
+	end
+
+	if #needs_restart > 0 then
+		local icon, rect = tweak_data.hud_icons:get_icon_data("csb_stamina")
+		self._restart_notification = BLT.Notifications:add_notification({
+			title = managers.localization:text("blt_restart_required"),
+			text = managers.localization:text("blt_restart_required_desc"),
+			icon = icon,
+			icon_texture_rect = rect,
+			priority = 2000,
+			callback = function()
+				managers.system_menu:show({
+					title = managers.localization:text("blt_restart_required"),
+					text = managers.localization:text("blt_restart_required_details", { mods = table.concat(needs_restart, "\n") }),
+					button_list = {
+						{
+							text = managers.localization:text("dialog_yes"),
+							callback_func = function()
+								MenuCallbackHandler:_dialog_quit_yes()
+							end
+						},
+						{
+							text = managers.localization:text("dialog_no"),
+							cancel_button = true
+						}
+					}
+				})
+			end
+		})
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Autoupdates
 

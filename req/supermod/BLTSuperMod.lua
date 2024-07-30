@@ -51,6 +51,9 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 			if self._assets then
 				self._assets:FromXML(tag, scope)
 			end
+			if self._mod.needs_restart == nil then
+				self._mod.needs_restart = true
+			end
 		end,
 		hooks = function(tag, scope)
 			self:_add_hooks(tag, scope)
@@ -60,10 +63,17 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 				self:_add_native_module(tag, scope)
 			end
 		end,
-
 		-- These tags are used by the Wren-based XML Tweaker
-		wren = function(tag, scope) end,
-		tweak = function(tag, scope) end,
+		wren = function(tag, scope)
+			if self._mod.needs_restart == nil then
+				self._mod.needs_restart = true
+			end
+		end,
+		tweak = function(tag, scope)
+			if self._mod.needs_restart == nil then
+				self._mod.needs_restart = true
+			end
+		end,
 	})
 end
 

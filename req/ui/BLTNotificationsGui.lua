@@ -237,7 +237,7 @@ function BLTNotificationsGui:add_notification(parameters)
 		font = tweak_data.menu.pd2_small_font,
 		font_size = tweak_data.menu.pd2_small_font_size,
 		x = _x,
-		w = new_notif:w() - _x,
+		w = new_notif:w() - _x - padding,
 		y = title:bottom(),
 		h = new_notif:h() - title:bottom(),
 		color = tweak_data.screen_colors.text,

@@ -124,6 +124,10 @@
 	"blt_no_desc" : "No Description",
 
 	"blt_default_profile_name" : "Profile $number",
-	"blt_profile_delete" : "Are you sure you want to delete the mod profile \"$profile\"?"
+	"blt_profile_delete" : "Are you sure you want to delete the mod profile \"$profile\"?",
+
+	"blt_restart_required" : "Restart Required",
+	"blt_restart_required_desc" : "One or more mods require a full game restart to work correctly!",
+	"blt_restart_required_details" : "The following mod(s) require a full game restart to work correctly:\n$mods\n\nContinuing to play without restarting could cause crashes!\nDo you want to close the game now?"
 
 }

@@ -33,6 +33,7 @@ function BLTMod:init(identifier, data, path)
 	self.library = data.is_library or false
 	self.vr_disabled = data.vr_disabled or false
 	self.desktop_disabled = data.desktop_disabled or false
+	self.needs_restart = data.needs_restart or nil
 
 	-- Updates data
 	self.updates = {}
