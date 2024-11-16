@@ -305,7 +305,7 @@ function BLTModsGui:update_visible_mods(scroll_position, search_list, search_tex
 
 	-- Create mod boxes
 	for _, mod in ipairs(mods) do
-		if (BLTModsGui.show_libraries or not mod:IsLibrary()) and mod:GetName():lower():find(BLTModsGui.last_search) then
+		if (BLTModsGui.show_libraries or not mod:IsLibrary()) and mod:GetName():lower():find(BLTModsGui.last_search, 1, true) then
 			local i = #self._buttons + 1
 
 			-- Wrap mods around the download button, if mod icons are disabled
