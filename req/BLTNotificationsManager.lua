@@ -25,14 +25,23 @@ function BLTNotificationsManager:_get_notification(uid)
 	return nil, -1
 end
 
+---@class notification_data
+---@field title string? @Title of the notification, defaults to `"No Title"`
+---@field text string? @Text of the notification, defaults to `""`
+---@field icon string? @Texture to use as an icon for the notification
+---@field icon_texture_rect { x: number, y: number, w: number, h: number }? @Part of the texture to use as icon, defaults to the full texture
+---@field color Color? @Color of the notification, currently unused
+---@field priority number? @Priority of the notification, defaults to the order it's created in
+---@field callback fun(uid: number)? @Function that is called when the notification is clicked, defaults to opening the mod manager
+
 ---Gets the ordered table of all notifications currently being displayed
----@return table @Table containing notification data
+---@return notification_data[] @Table containing notification data
 function BLTNotificationsManager:get_notifications()
 	return self._notifications
 end
 
 ---Adds a notification to the manager, and shows it on the notifications UI
----@param parameters table @Table containing data for the notification
+---@param parameters notification_data @Table containing data for the notification
 ---@return number @ID of the added notification
 function BLTNotificationsManager:add_notification(parameters)
 	-- Create and store the notification

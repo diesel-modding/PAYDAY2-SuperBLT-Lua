@@ -68,12 +68,16 @@ function BLTModManager:SetModsList(mods_list)
 	end
 end
 
+---@param profile_index integer?
+---@return string
 function BLTModManager:ProfileName(profile_index)
 	profile_index = profile_index or self.profile_index
 
 	return self.profiles[profile_index] and self.profiles[profile_index].name or managers.localization:text("blt_default_profile_name", { number = tostring(profile_index) })
 end
 
+---@param name string
+---@param profile_index integer?
 function BLTModManager:SetProfileName(name, profile_index)
 	profile_index = profile_index or self.profile_index
 
@@ -82,6 +86,8 @@ function BLTModManager:SetProfileName(name, profile_index)
 	end
 end
 
+---@param based_on integer?
+---@return integer
 function BLTModManager:CreateProfile(based_on)
 	local profile = deep_clone(self.profiles[based_on or self.profile_index])
 	profile.name = nil
@@ -89,6 +95,7 @@ function BLTModManager:CreateProfile(based_on)
 	return #self.profiles
 end
 
+---@param profile_index integer?
 function BLTModManager:SaveProfile(profile_index)
 	profile_index = profile_index or self.profile_index
 
@@ -111,6 +118,8 @@ function BLTModManager:SaveProfile(profile_index)
 	end
 end
 
+---@param profile_index integer
+---@param is_startup boolean?
 function BLTModManager:SwitchProfile(profile_index, is_startup)
 	if profile_index < 1 or profile_index > #self.profiles then
 		return
@@ -136,6 +145,7 @@ function BLTModManager:SwitchProfile(profile_index, is_startup)
 	end
 end
 
+---@param profile_index integer?
 function BLTModManager:DeleteProfile(profile_index)
 	profile_index = profile_index or self.profile_index
 
