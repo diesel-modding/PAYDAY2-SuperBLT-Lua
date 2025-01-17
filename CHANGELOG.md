@@ -4,6 +4,11 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.4.6
+
+- Fixed a crash in the mod search box
+- Fixed an oversight in Hooks:OverrideFunction
+
 ## v1.4.5
 
 - Improved developer annotations
