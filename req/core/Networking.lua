@@ -15,7 +15,7 @@ NetworkHelper._receive_hooks = {}
 -- For sending messages we will only use the AllPeers identifier to avoid unneccessary message processing
 
 ---Checks if the game is in a multiplayer state, and has an active multiplayer session
----@return boolean @The active multiplayer session, or `false`
+---@return table|false @The active multiplayer session, or `false`
 function NetworkHelper:IsMultiplayer()
 	return managers.network and managers.network:session() or false
 end

@@ -107,6 +107,7 @@ function MenuHelper:AddButton(button_data)
 end
 
 ---@class divider_data: menu_item_data
+---@field title string? @Title of the item, treated as localization key unless `localized` is set to `false`
 ---@field size number? @The size of the item, defaults to `8`
 ---@field no_text boolean? @Wether to display the divider as empty space, defaults to `true`
 

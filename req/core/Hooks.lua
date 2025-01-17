@@ -193,10 +193,16 @@ end
 ---@param func string @Name of the function on `object` override
 ---@param override function @Function to replace the original function `func` with
 function Hooks:OverrideFunction(object, func, override)
-	if not self._function_hooks[object] or not self._function_hooks[object][func] then
+	local hook_data = self._function_hooks[object] and self._function_hooks[object][func]
+	if hook_data then
+		self._function_hooks[object][func] = nil
+
 		object[func] = override
+
+		self:_ChkCreateTableStructure(object, func)
+		self._function_hooks[object][func].overrides = hook_data.overrides
 	else
-		self._function_hooks[object][func].original = override
+		object[func] = override
 	end
 end
 
