@@ -111,7 +111,7 @@ function BLTModManager:SaveProfile(profile_index)
 		end
 
 		profile.mods[mod:GetId()] = {
-			enabled = mod:IsEnabled(),
+			enabled = mod._dependency_enabled or mod:IsEnabled(),
 			safe = mod:IsSafeModeEnabled(),
 			updates = updates
 		}
@@ -323,7 +323,7 @@ Hooks:Add("BLTOnSaveData", "BLTOnSaveData.BLTModManager", function(save_data)
 	local wren_file = io.open(BLTModManager.Constants:ModManagerWrenDisabledModsFile(BLT:IsVr()), "wb")
 	if wren_file then
 		for _, mod in pairs(BLT.Mods:Mods()) do
-			if not mod:IsEnabled() then
+			if not mod._dependency_enabled and not mod:IsEnabled() then
 				wren_file:write(mod.path .. "supermod.xml" .. "\n")
 			end
 		end

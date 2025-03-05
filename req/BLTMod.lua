@@ -64,6 +64,7 @@ function BLTMod:Setup()
 
 	-- Check dependencies are installed for this mod
 	if not self:AreDependenciesInstalled() then
+		self._dependency_enabled = self._enabled
 		table.insert(self._errors, "blt_mod_missing_dependencies")
 		self:RetrieveDependencies()
 		self:SetEnabled(false, true)
