@@ -1,5 +1,6 @@
 import "base/native" for Logger, IO, XML
 import "base/native/Environment_001" for Environment
+import "base/private/json" for JSON, JSONParser
 
 /**
  * XML Tweak Applier
@@ -216,7 +217,7 @@ class XMLTweakApplier {
 						if(!continue_search) {
 							return false
 						}
-						
+
 						if(info["level"] > info["deepestlevel"]) {
 							info["deepestlevel"] = info["level"]
 						}
@@ -350,7 +351,7 @@ class XMLLoader {
 				if (line != "") disabled_mods.add(line)
 			}
 		}
-		
+
 		for (mod in IO.listDirectory("mods", true)) {
 			// Skip over disabled mods
 			if (!disabled_mods.contains("mods/%(mod)/supermod.xml")) {
@@ -379,16 +380,34 @@ class XMLLoader {
 			}
 		}
 	}
-	
+
 	static load_supermod_file(mod_path, mod_data, tweak_only) {
 		var path = "%(mod_path)/supermod.xml"
 
 		if (IO.info(path) != "file") {
 			return
 		}
-	
-		var data = IO.read(path)
-		var xml = XML.new(data)
+
+		// Disable Wren and Tweaks if flags desktop_disabled or vr_disabled are true
+		var mod_txt_path = "%(mod_path)/mod.txt"
+		var do_tweaks = true
+
+		if (IO.info(mod_txt_path) == "file") {
+			(Fiber.new {
+				var json_data = JSON.parse(IO.read(mod_txt_path))
+				if (json_data["desktop_disabled"] && !Environment.is_vr || json_data["vr_disabled"] && Environment.is_vr) {
+					do_tweaks = false
+				}
+			}).try()
+		}
+
+		if (!do_tweaks) {
+			return
+		}
+
+		var xml_data = IO.read(path)
+		var xml = XML.new(xml_data)
+
 		for (elem in xml.first_child.element_children) { // <?xml?> -> <mod> -> first elem
 			var name = elem.name
 
@@ -451,6 +470,7 @@ class XMLLoader {
 		var data = IO.read(path)
 		var xml = XML.new(data)
 		var root = xml.first_child // <?xml?> -> <tweak/tweaks>
+
 		if(root.name == "tweaks") {
 			for (elem in root.element_children) {
 				handle_tweak_element(mod, path, elem)
@@ -460,6 +480,7 @@ class XMLLoader {
 		} else {
 			Logger.log("[WARN] Unknown tweak root type in %(path): %(root.name)")
 		}
+
 		xml.delete()
 	}
 
