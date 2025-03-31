@@ -317,20 +317,6 @@ Hooks:Add("BLTOnSaveData", "BLTOnSaveData.BLTModManager", function(save_data)
 			mods = v.mods
 		})
 	end
-
-	-- Save a Wren-readable list of disabled mods - it doesn't have a JSON parser so it
-	-- can't load our normal file, and it needs to know what's enabled before any Lua code runs.
-	local wren_file = io.open(BLTModManager.Constants:ModManagerWrenDisabledModsFile(BLT:IsVr()), "wb")
-	if wren_file then
-		for _, mod in pairs(BLT.Mods:Mods()) do
-			if not mod._dependency_enabled and not mod:IsEnabled() then
-				wren_file:write(mod.path .. "supermod.xml" .. "\n")
-			end
-		end
-		wren_file:close()
-	else
-		BLT:Log(LogLevel.ERROR, "[BLT] Could not save file " .. BLTModManager.Constants:ModManagerWrenDisabledModsFile(BLT:IsVr()))
-	end
 end)
 
 --------------------------------------------------------------------------------
@@ -383,14 +369,6 @@ function BLTModManager.Constants:ModManagerSaveFile(is_vr)
 		return self:SavesDirectory() .. "blt_data_vr.txt"
 	else
 		return self:SavesDirectory() .. "blt_data.txt"
-	end
-end
-
-function BLTModManager.Constants:ModManagerWrenDisabledModsFile(is_vr)
-	if is_vr then
-		return self:SavesDirectory() .. "blt_wren_disabled_mods_vr.txt"
-	else
-		return self:SavesDirectory() .. "blt_wren_disabled_mods.txt"
 	end
 end
 

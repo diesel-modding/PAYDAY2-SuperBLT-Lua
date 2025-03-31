@@ -1,6 +1,6 @@
 import "base/native" for Logger, IO, XML
 import "base/native/Environment_001" for Environment
-import "base/private/json" for JSON, JSONParser
+import "base/private/json" for Json
 
 /**
  * XML Tweak Applier
@@ -329,36 +329,54 @@ var ModErrorHandler = ModErrorHandlerImpl.new()
 
 class XMLLoader {
 	static init() {
-		// Load the list of disabled mods that BLT writes for us
-		// (note it would be really nice to use the 'continue' keyword here, but older
-		//  versions of the DLL might not have it yet)
-		var disabled_mods_path = "mods/saves/blt_wren_disabled_mods.txt"
+		// Check for disabled mods
+		var blt_data_path = "mods/saves/blt_data.txt"
 
 		// Create a fiber to check if we are running in VR to prevent crashes with outdated dll versions
 		(Fiber.new {
-			var disabled_mods_path_vr = "mods/saves/blt_wren_disabled_mods_vr.txt"
-			if (Environment.is_vr && IO.info(disabled_mods_path_vr) == "file") {
-				disabled_mods_path = disabled_mods_path_vr
+			var blt_data_path_vr = "mods/saves/blt_data_vr.txt"
+			if (Environment.is_vr && IO.info(blt_data_path_vr) == "file") {
+				blt_data_path = blt_data_path_vr
 			}
 		}).try()
 
-		var disabled_mods = []
-		if (IO.info(disabled_mods_path) == "file") {
-			var data = IO.read(disabled_mods_path)
-			for (line in data.split("\n")) {
-				// Unfortunately the trim() function isn't present in older versions of Wren, but there
-				// should never be any trailing or leading whitespace anyway.
-				if (line != "") disabled_mods.add(line)
-			}
+		// Load disabled mods from the BLT savefile
+		var disabled_mods = {}
+		if (IO.info(blt_data_path) == "file") {
+			(Fiber.new {
+				var json_data = Json.parse(IO.read(blt_data_path))
+				var mod_data = json_data["mods"] // Fallback to savedata before profiles
+				var profiles = json_data["profiles"]
+				if (profiles) {
+					var profile_index = json_data["profile_index"] == null ? 0 : json_data["profile_index"]
+					profile_index = profile_index.clamp(1, profiles.count)
+					var profile = profiles[profile_index - 1]
+					if (profile && profile["mods"]) {
+						mod_data = profile["mods"]
+					}
+				}
+
+				if (!mod_data) {
+					return
+				}
+
+				for (entry in mod_data) {
+					if (entry.value["enabled"] == false) {
+						disabled_mods[entry.key] = true
+					}
+				}
+			}).try()
 		}
 
 		for (mod in IO.listDirectory("mods", true)) {
 			// Skip over disabled mods
-			if (!disabled_mods.contains("mods/%(mod)/supermod.xml")) {
+			if (!disabled_mods[mod]) {
 				var mod_data = ModData.new(mod)
 				Tweaker.mods_data[mod] = mod_data
 
 				load_supermod_file("mods/%(mod)", mod_data, false)
+			} else {
+				Logger.log(mod)
 			}
 		}
 
@@ -394,7 +412,7 @@ class XMLLoader {
 
 		if (IO.info(mod_txt_path) == "file") {
 			(Fiber.new {
-				var json_data = JSON.parse(IO.read(mod_txt_path))
+				var json_data = Json.parse(IO.read(mod_txt_path))
 				if (json_data["desktop_disabled"] && !Environment.is_vr || json_data["vr_disabled"] && Environment.is_vr) {
 					do_tweaks = false
 				}
