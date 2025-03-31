@@ -356,13 +356,11 @@ class XMLLoader {
 					}
 				}
 
-				if (!mod_data) {
-					return
-				}
-
-				for (entry in mod_data) {
-					if (entry.value["enabled"] == false) {
-						disabled_mods[entry.key] = true
+				if (mod_data) {
+					for (entry in mod_data) {
+						if (entry.value["enabled"] == false) {
+							disabled_mods[entry.key] = true
+						}
 					}
 				}
 			}).try()
@@ -375,8 +373,6 @@ class XMLLoader {
 				Tweaker.mods_data[mod] = mod_data
 
 				load_supermod_file("mods/%(mod)", mod_data, false)
-			} else {
-				Logger.log(mod)
 			}
 		}
 
