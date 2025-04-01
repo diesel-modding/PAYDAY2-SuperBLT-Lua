@@ -4,6 +4,12 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.4.7
+
+- Added JSON parser for Wren (.ruby)
+- Disabled loading of supermod.xml files when a mod is disabled due to VR/Desktop mode (test1)
+- Fixed mods having to be manually re-enabled after a missing dependency was installed
+
 ## v1.4.6
 
 - Fixed a crash in the mod search box
