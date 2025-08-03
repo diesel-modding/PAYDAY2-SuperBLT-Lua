@@ -10,39 +10,37 @@ Hooks:Add("GameSetupUpdate", "GameSetupUpdate_Queue", function(t, dt)
 	DelayedCalls:Update(t, dt)
 end)
 
-function DelayedCalls:Update(time, deltaTime)
+function DelayedCalls:Update(t, dt)
 	local calls = self._calls
 	self._calls = {}
 
 	for k, v in pairs(calls) do
-		v.currentTime = v.currentTime + deltaTime
 		if self._remove_queue[k] then
-			-- Remove call if it has been queued for removal
 			self._remove_queue[k] = nil
-		elseif v.currentTime > v.timeToWait then
-			if v.functionCall then
-				v.functionCall()
-			end
+		elseif t >= v.executeTime then
+			v.functionCall()
 		else
-			-- If a call with that id already exists, it has been added during call iteration
-			-- If that is the case, prefer the existing one (new call overrides old)
 			self._calls[k] = self._calls[k] or v
 		end
 	end
 end
 
----Adds a function to be automatically called after a set delay
+---Adds a function to be automatically called after a set delay  
 ---If a call with the same id already exists, it will be replaced
 ---@param id string @Unique name for this delayed call
 ---@param time number @Time in seconds to call the specified function after
 ---@param func function @Function to call after the time runs out
 function DelayedCalls:Add(id, time, func)
-	local queuedFunc = {
+	if not id or type(time) ~= "number" or type(func) ~= "function" then
+		BLT:Log(LogLevel.ERROR, string.format("[DelayedCalls] Could not add call '%s'", id))
+		return
+	end
+
+	self._remove_queue[id] = nil
+	self._calls[id] = {
 		functionCall = func,
-		timeToWait = time,
-		currentTime = 0
+		executeTime = Application:time() + time
 	}
-	self._calls[id] = queuedFunc
 end
 
 ---Removes a scheduled call that hasn't been called yet
