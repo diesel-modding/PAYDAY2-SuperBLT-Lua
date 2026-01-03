@@ -366,20 +366,40 @@ class XMLLoader {
 			}).try()
 		}
 
-		for (mod in IO.listDirectory("mods", true)) {
-			// Skip over disabled mods
-			if (!disabled_mods[mod]) {
-				var mod_data = ModData.new(mod)
-				Tweaker.mods_data[mod] = mod_data
+		// Sort by priority value
+		var mods_by_priority = []
+		var mod_names = IO.listDirectory("mods", true)
 
-				load_supermod_file("mods/%(mod)", mod_data, false)
+		for (mod in mod_names) {
+			var mod_data_path = "mods/%(mod)/mod.txt"
+			// Skip over disabled mods
+			if (disabled_mods[mod]) {
+				continue
 			}
+
+			if (IO.info(mod_data_path) != "file") {
+				mods_by_priority.add(ModData.new(mod, 0))
+				continue
+			}
+
+			var json_data = Json.parse(IO.read(mod_data_path))
+			var priority = json_data["priority"] == null ? 0 : json_data["priority"]
+
+			mods_by_priority.add(ModData.new(mod, priority))
 		}
+		mods_by_priority.sort {| a, b | a.priority < b.priority }
 
 		if (IO.info("assets/mod_overrides") == "dir") {
 			for (mod in IO.listDirectory("assets/mod_overrides", true)) {
 				load_supermod_file("assets/mod_overrides/%(mod)", null, true)
 			}
+		}
+
+		for (mod_number in 0..mods_by_priority.count - 1) {
+			var mod_data = mods_by_priority[mod_number]
+			Tweaker.mods_data[mod_data.name] = mod_data
+
+			load_supermod_file("mods/%(mod_data.name)", mod_data, false)
 		}
 	}
 
@@ -519,12 +539,14 @@ class XMLLoader {
 }
 
 class ModData {
-	construct new(name) {
+	construct new(name, priority) {
 		_name = name
+		_priority = priority
 		_scripts_root = "wren"
 	}
 
 	name { _name }
+	priority { _priority }
 	scripts_root { _scripts_root }
 	scripts_root=(v) { _scripts_root = v }
 }
