@@ -382,12 +382,19 @@ class XMLLoader {
 				continue
 			}
 
-			var json_data = Json.parse(IO.read(mod_data_path))
-			var priority = json_data["priority"] == null ? 0 : json_data["priority"]
+			var priority = 0
+			(Fiber.new {
+				var json_data = Json.parse(IO.read(mod_data_path))
+				if (json_data["priority"] is Num) {
+					priority = json_data["priority"]
+				} else if (json_data["priority"] is String) {
+					priority = Num.fromString(json_data["priority"])
+				}
+			}).try()
 
 			mods_by_priority.add(ModData.new(mod, priority))
 		}
-		mods_by_priority.sort {| a, b | a.priority < b.priority }
+		mods_by_priority.sort {| a, b | a.priority > b.priority }
 
 		if (IO.info("assets/mod_overrides") == "dir") {
 			for (mod in IO.listDirectory("assets/mod_overrides", true)) {
@@ -395,10 +402,8 @@ class XMLLoader {
 			}
 		}
 
-		for (mod_number in 0..mods_by_priority.count - 1) {
-			var mod_data = mods_by_priority[mod_number]
+		for (mod_data in mods_by_priority) {
 			Tweaker.mods_data[mod_data.name] = mod_data
-
 			load_supermod_file("mods/%(mod_data.name)", mod_data, false)
 		}
 	}
