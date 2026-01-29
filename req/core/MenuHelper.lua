@@ -35,6 +35,7 @@ function MenuHelper:NewMenu(menu_id)
 
 	local new_menu = deep_clone(self.menu_to_clone)
 	new_menu._items = {}
+	new_menu._parameters.modifier = {}
 	self.menus[menu_id] = new_menu
 
 	return new_menu

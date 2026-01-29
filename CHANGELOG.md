@@ -4,6 +4,10 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.4.9
+
+- Fixed a crash when opening any modded menus
+
 ## v1.4.8
 
 - Improved DelayedCalls handling
