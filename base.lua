@@ -189,8 +189,10 @@ function BLT:OverrideRequire()
 		local path_lower = path:lower()
 		local require_result = nil
 
+		rawset(_G, BLTModManager.Constants.required_script_type_global, "PreHook")
 		self:RunHookTable(self.hook_tables.pre, path_lower)
 		require_result = self.require(...)
+		rawset(_G, BLTModManager.Constants.required_script_type_global, "PostHook")
 		self:RunHookTable(self.hook_tables.post, path_lower)
 
 		for k, v in ipairs(self.hook_tables.wildcards) do
