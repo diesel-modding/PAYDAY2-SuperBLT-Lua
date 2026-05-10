@@ -134,13 +134,17 @@ function Hooks:PreHook(object, func, id, pre_call)
 end
 
 ---Removes a prehook and prevents it from being run
+---If `object` is provided, only that object is affected; otherwise all objects are processed.
 ---@param id string @Name of the prehook to remove
-function Hooks:RemovePreHook(id)
-	for object_i, object in pairs(self._function_hooks) do
-		for func_i, func in pairs(object) do
-			for override_i, override in ipairs(func.overrides.pre) do
-				if override.id == id then
-					table.remove(func.overrides.pre, override_i)
+---@param object table? @Object to remove the prehook from
+function Hooks:RemovePreHook(id, object)
+	for hooked_object_i, hooked_object in pairs(self._function_hooks) do
+		if not object or hooked_object_i == object then
+			for func_i, func in pairs(hooked_object) do
+				for override_i, override in ipairs(func.overrides.pre) do
+					if override.id == id then
+						table.remove(func.overrides.pre, override_i)
+					end
 				end
 			end
 		end
@@ -174,14 +178,18 @@ function Hooks:PostHook(object, func, id, post_call)
 	table.insert(self._function_hooks[object][func].overrides.post, func_tbl)
 end
 
----Removes a posthook and prevents it from being run
+---Removes a posthook and prevents it from being run  
+---If `object` is provided, only that object is affected; otherwise all objects are processed.
 ---@param id string @Name of the posthook to remove
-function Hooks:RemovePostHook(id)
-	for object_i, object in pairs(self._function_hooks) do
-		for func_i, func in pairs(object) do
-			for override_i, override in ipairs(func.overrides.post) do
-				if override.id == id then
-					table.remove(func.overrides.post, override_i)
+---@param object table? @Object to remove the posthook from
+function Hooks:RemovePostHook(id, object)
+	for hooked_object_i, hooked_object in pairs(self._function_hooks) do
+		if not object or hooked_object_i == object then
+			for func_i, func in pairs(hooked_object) do
+				for override_i, override in ipairs(func.overrides.post) do
+					if override.id == id then
+						table.remove(func.overrides.post, override_i)
+					end
 				end
 			end
 		end
