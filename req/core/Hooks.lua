@@ -201,7 +201,7 @@ end
 ---@param func string @Name of the function on `object` override
 ---@param override function @Function to replace the original function `func` with
 function Hooks:OverrideFunction(object, func, override)
-	if not object or type(object[func]) ~= "function" or type(override) ~= "function" then
+	if not object or type(override) ~= "function" then
 		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not override function '%s'", tostring(func)))
 		return
 	end
