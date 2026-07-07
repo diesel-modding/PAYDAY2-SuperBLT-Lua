@@ -113,8 +113,8 @@ end
 ---@param id string @Unique name for this prehook
 ---@param pre_call function @Function to be called before `func` on `object`
 function Hooks:PreHook(object, func, id, pre_call)
-	if not object or type(pre_call) ~= "function" then
-		self:_PrePostHookError(func, id)
+	if not object or type(object[func]) ~= "function" or type(pre_call) ~= "function" then
+		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not pre hook function '%s' (%s)", tostring(func), tostring(id)))
 		return
 	end
 
@@ -158,8 +158,8 @@ end
 ---@param id string @Unique name for this posthook
 ---@param post_call function @Function to be called after `func` on `object`
 function Hooks:PostHook(object, func, id, post_call)
-	if not object or type(post_call) ~= "function" then
-		self:_PrePostHookError(func, id)
+	if not object or type(object[func]) ~= "function" or type(post_call) ~= "function" then
+		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not post hook function '%s' (%s)", tostring(func), tostring(id)))
 		return
 	end
 
@@ -201,6 +201,11 @@ end
 ---@param func string @Name of the function on `object` override
 ---@param override function @Function to replace the original function `func` with
 function Hooks:OverrideFunction(object, func, override)
+	if not object or type(object[func]) ~= "function" or type(override) ~= "function" then
+		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not override function '%s'", tostring(func)))
+		return
+	end
+
 	local hook_data = self._function_hooks[object] and self._function_hooks[object][func]
 	if hook_data then
 		self._function_hooks[object][func] = nil
@@ -232,11 +237,6 @@ function Hooks:GetReturn()
 	if self._current_function_hook and self._current_function_hook.returns then
 		return unpack(Hooks._current_function_hook.returns)
 	end
-end
-
--- Shared function to log hook errors
-function Hooks:_PrePostHookError(func, id)
-	BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not hook function '%s' (%s)", tostring(func), tostring(id)))
 end
 
 -- Helper to create the hooks table structure and function override
