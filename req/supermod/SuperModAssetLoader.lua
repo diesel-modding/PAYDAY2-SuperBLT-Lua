@@ -9,7 +9,8 @@ c.DYNAMIC_LOAD_TYPES = {
 }
 
 c.EXTENSION_MAPPINGS = {
-	dds = "texture"
+	dds = "texture",
+	wem = "stream"
 }
 
 local _dynamic_unloaded_assets = {}
@@ -20,9 +21,8 @@ local next_asset_id = 1
 
 function c:init(mod)
 	self._mod = mod
-
-	self.script_loadable_packages = {
-	}
+	self.script_loadable_packages = {}
+	self.asset_specs = {}
 end
 
 function c:FromXML(xml, parent_scope)
@@ -63,9 +63,12 @@ function c:_converted_xml_file(tag, scope)
 end
 
 function c:LoadAsset(name, file, params, xml_convert)
-	local dot_index = name:find(".", 1, true)
-	local dbpath = name:sub(1, dot_index - 1)
-	local extension = name:sub(dot_index + 1)
+	local dbpath, extension = name:match("([^.]+)%.(.+)")
+	if not dbpath or not extension then
+		BLT:Log(LogLevel.ERROR, string.format("[Assets] Invalid asset '%s' ('%s')", tostring(name), tostring(file)))
+		return
+	end
+
 	extension = c.EXTENSION_MAPPINGS[extension] or extension
 
 	local dyn_package = c.DYNAMIC_LOAD_TYPES[extension] or false
@@ -100,19 +103,28 @@ function c:LoadAsset(name, file, params, xml_convert)
 
 		table.insert(group.assets, spec)
 	else
-		error("Unrecognised load type " .. params.target)
+		BLT:Log(LogLevel.ERROR, string.format("[Assets] Unrecognized load type '%s'", tostring(params.target)))
+		return
 	end
+
+	table.insert(self.asset_specs, spec)
 end
 
 function c:LoadAssetGroup(group_name)
-	assert(group_name, "cannot load nil group")
-	local group = self.script_loadable_packages[group_name]
-
-	if not group then
-		error("Group '" .. group_name .. "' does not exist")
+	if not group_name then
+		BLT:Log(LogLevel.ERROR, "[Assets] Can not load nil group")
+		return
 	end
 
-	if group.loaded then return end
+	local group = self.script_loadable_packages[group_name]
+	if not group then
+		BLT:Log(LogLevel.ERROR, string.format("[Assets] Group '%s' does not exist", tostring(group_name)))
+		return
+	end
+
+	if group.loaded then
+		return
+	end
 
 	group.loaded = true
 
@@ -124,11 +136,15 @@ function c:LoadAssetGroup(group_name)
 end
 
 function c:FreeAssetGroup(group_name)
-	assert(group_name, "cannot free nil group")
-	local group = self.script_loadable_packages[group_name]
+	if not group_name then
+		BLT:Log(LogLevel.ERROR, "[Assets] Can not free nil group")
+		return
+	end
 
+	local group = self.script_loadable_packages[group_name]
 	if not group then
-		error("Group '" .. group_name .. "' does not exist")
+		BLT:Log(LogLevel.ERROR, string.format("[Assets] Group '%s' does not exist", tostring(group_name)))
+		return
 	end
 
 	-- We don't care if the group is loaded or not, as each asset
@@ -159,6 +175,7 @@ end
 
 local function convert_xml_asset(params)
 	BLT:Log(LogLevel.INFO, string.format("[BLT] Converting '%s' into '%s'", tostring(params.path), tostring(params.built_path)))
+
 	-- Read the source file
 	local input_str
 	do
@@ -197,12 +214,11 @@ end
 
 -- Asset system - independent of any object
 _flush_assets = function(dres)
-	dres = dres or (managers and managers.dyn_resource)
-	if not dres then return end
+	dres = dres or managers and managers.dyn_resource
+	if not dres then
+		return
+	end
 
-	local next_to_load = {}
-
-	local i = 1
 	for id, asset in pairs(_dynamic_unloaded_assets) do
 		local ext = Idstring(asset.extension)
 		local dbpath = Idstring(asset.dbpath)
@@ -217,9 +233,6 @@ _flush_assets = function(dres)
 			error("Cannot load unreadable asset " .. path)
 		end
 
-		-- TODO a good way to log this
-		-- log("Loading " .. asset.dbpath .. " " .. asset.extension .. " from " .. path)
-
 		if not asset._entry_created then
 			blt.ignoretweak(dbpath, ext)
 			BLT.AssetManager:CreateEntry(dbpath, ext, path)
@@ -232,31 +245,28 @@ _flush_assets = function(dres)
 			_currently_loading_assets[asset] = {}
 
 			dres:load(ext, dbpath, asset._targeted_package, function()
-				-- This is called when the asset is done loading.
-				-- Should we wait for these to all be called?
 				_currently_loading_assets[asset] = nil
 			end)
 
 			-- Warn the user if a file has not loaded in the last fifteen seconds
 			DelayedCalls:Add("SuperBLTAssetLoaderModelWatchdog", 15, function()
 				if next(_currently_loading_assets) then
-					BLT:Log(LogLevel.WARN, "[BLT] No asset has been loaded in the last 15 seconds, and these assets have not yet loaded.")
-					BLT:Log(LogLevel.WARN, "[BLT] This suggests they may be corrupt, and could prevent the game from exiting the current level:")
+					BLT:Log(LogLevel.WARN, "[Assets] No asset has been loaded in the last 15 seconds, and these assets have not yet loaded.")
+					BLT:Log(LogLevel.WARN, "[Assets] This suggests they may be corrupt, and could prevent the game from exiting the current level:")
 					for spec, info in pairs(_currently_loading_assets) do
 						BLT:Log(LogLevel.WARN, "\t" .. spec.dbpath .. "." .. spec.extension .. " (" .. spec.file .. ")")
 					end
 				end
 			end)
-
-			i = i + 1
 		end
 	end
 
 	_dynamic_unloaded_assets = {}
 end
+
 Hooks:Add("DynamicResourceManagerCreated", "BLTAssets.DynamicResourceManagerCreated", function(...)
 	local success, err = pcall(_flush_assets, ...)
 	if not success then
-		BLT:Log(LogLevel.ERROR, "[BLT] Error in asset loader: " .. tostring(err))
+		BLT:Log(LogLevel.ERROR, "[Assets] Error in asset loader: " .. tostring(err))
 	end
 end)
