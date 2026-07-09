@@ -75,9 +75,9 @@ function MenuManager:_base_process_menu(menu_names, parent_menu_name, parent_men
 			Hooks:RegisterHook(hook_id_populate)
 			Hooks:RegisterHook(hook_id_build)
 
-			Hooks:Call(hook_id_setup, self, nodes)
-			Hooks:Call(hook_id_populate, self, nodes)
-			Hooks:Call(hook_id_build, self, nodes)
+			Hooks:CallSafe(hook_id_setup, self, nodes)
+			Hooks:CallSafe(hook_id_populate, self, nodes)
+			Hooks:CallSafe(hook_id_build, self, nodes)
 		end
 	end
 end

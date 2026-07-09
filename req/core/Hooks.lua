@@ -72,7 +72,7 @@ function Hooks:Remove(id)
 	end
 end
 
----Calls a specified hook, and all of its hooked functions
+---Calls a specified hook and all of its hooked functions
 ---@param key string @Name of the hook to call
 ---@param ... any @Arguments to pass to the hooked functions
 function Hooks:Call(key, ...)
@@ -83,6 +83,25 @@ function Hooks:Call(key, ...)
 	for k, v in pairs(self._registered_hooks[key]) do
 		if type(v) == "table" and type(v.func) == "function" then
 			v.func(...)
+		end
+	end
+end
+
+---Calls a specified hook and all of its hooked functions in safe mode  
+---Errors in individual functions will not propagate outside and stop execution
+---@param key string @Name of the hook to call
+---@param ... any @Arguments to pass to the hooked functions
+function Hooks:CallSafe(key, ...)
+	if not self._registered_hooks[key] then
+		return
+	end
+
+	for k, v in pairs(self._registered_hooks[key]) do
+		if type(v) == "table" and type(v.func) == "function" then
+			local success, error = pcall(v.func, ...)
+			if not success then
+				BLT:Log(LogLevel.ERROR, string.format("[Hooks] Error in hook function '%s'", tostring(v.id)))
+			end
 		end
 	end
 end
