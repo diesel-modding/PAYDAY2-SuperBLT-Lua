@@ -112,7 +112,7 @@ function NetworkHelper:AddReceiveHook(message_id, hook_id, func)
 	self._receive_hooks[message_id] = self._receive_hooks[message_id] or {}
 
 	for k, v in pairs(self._receive_hooks[message_id]) do
-		if v.id == id then
+		if v.id == hook_id then
 			return
 		end
 	end
