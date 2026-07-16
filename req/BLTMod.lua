@@ -1,12 +1,26 @@
 ---@class BLTMod
----@field new fun(self, identifier: string, data: table, path: string):BLTMod, boolean
+---@field new fun(self, identifier: string, data: nil, path: string):BLTMod, boolean
 BLTMod = blt_class()
 BLTMod.enabled = true
 BLTMod._enabled = true
 BLTMod.safe_mode = true
 
 function BLTMod:init(identifier, data, path)
-	if not identifier or not data or not path then
+	-- Kept the data argument to not change the function signature in case for some reason there's a mod out there that creates BLTMod instances
+	if data then
+		BLT:DeprecationWarning("BLTMod.init with data")
+	elseif io.file_is_readable(path .. "mod.txt") then
+		data = io.load_as_json(path .. "mod.txt")
+	elseif io.file_is_readable(path .. "mod.json") then
+		data = io.load_as_json(path .. "mod.json")
+	end
+
+	self.supermod_definition = data and data.supermod_definition or "supermod.xml"
+	if not data and io.file_is_readable(path .. self.supermod_definition) then
+		data = {} -- TODO: Merge BLTSuperMod into BLTMod and read XML earlier to initialize mod data properly
+	end
+
+	if not data then
 		return false
 	end
 
@@ -18,7 +32,7 @@ function BLTMod:init(identifier, data, path)
 	self.json_data = data
 	self.path = path
 
-	self.name = data.name or "Unnamed BLT Mod"
+	self.name = data.name or identifier
 	self.desc = data.description or "No description"
 	self.version = data.version or "1.0"
 	self.blt_version = data.blt_version or "1.0"
@@ -91,7 +105,7 @@ function BLTMod:Setup()
 	end
 
 	-- Set up the supermod instance
-	self.supermod = BLTSuperMod.try_load(self, self.json_data.supermod_definition)
+	self.supermod = BLTSuperMod.try_load(self, self.supermod_definition)
 end
 
 function BLTMod:AddHooks(data_key, destination, wildcards_destination)
@@ -475,7 +489,7 @@ end
 function BLTMod:GetDeveloperInfo()
 	local str = ""
 	local append = function(...)
-		for i, s in ipairs({...}) do
+		for i, s in ipairs({ ... }) do
 			str = str .. (i > 1 and " " or "") .. tostring(s)
 		end
 		str = str .. "\n"

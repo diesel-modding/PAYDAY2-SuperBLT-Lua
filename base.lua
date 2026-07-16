@@ -64,10 +64,10 @@ function BLT:Log(level, ...)
 		return
 	end
 
-	local out = {LogLevelPrefix[level] or "", ...}
+	local out = { LogLevelPrefix[level] or "", ... }
 	local n = select("#", ...) -- allow nil holes
 	-- skip prefix, allow for n=0
-	for i = 2, n+1, 1 do
+	for i = 2, n + 1, 1 do
 		out[i] = tostring(out[i])
 	end
 	log(table.concat(out, " "))
@@ -213,30 +213,15 @@ function BLT:FindMods()
 		return {}
 	end
 
-	for index, directory in pairs(folders) do
-		-- Check if this directory is excluded from being checked for mods (logs, saves, etc.)
+	for _, directory in pairs(folders) do
 		if not self.Mods:IsExcludedDirectory(directory) then
+			-- Attempt to create a BLT mod from the mod path
 			local mod_path = mods_directory .. directory .. "/"
-
-			-- Attempt to read the mod defintion file
-			local file = io.open(mod_path .. "mod.txt")
-			if file then
-				-- Read the file contents
-				local file_contents = file:read("*all")
-				file:close()
-
-				-- Create a BLT mod from the loaded data
-				local mod_content = json.decode(file_contents)
-				if mod_content then
-					local new_mod, valid = BLTMod:new(directory, mod_content, mod_path)
-					if valid then
-						table.insert(mods_list, new_mod)
-					end
-				else
-					self:Log(LogLevel.ERROR, "[BLT] An error occured while loading mod.txt from: " .. tostring(mod_path))
-				end
+			local new_mod, valid = BLTMod:new(directory, nil, mod_path)
+			if valid then
+				table.insert(mods_list, new_mod)
 			else
-				self:Log(LogLevel.WARN, "[BLT] Could not read or find mod.txt in " .. tostring(mod_path))
+				self:Log(LogLevel.WARN, string.format("[BLT] Could not read or find a valid mod definition in %s", mod_path))
 			end
 		end
 	end
