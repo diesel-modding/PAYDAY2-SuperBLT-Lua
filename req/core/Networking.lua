@@ -8,6 +8,7 @@ NetworkHelper.SinglePeerString = "%s/%s/%s/%s"
 NetworkHelper.ExceptPeer = "GNEP"
 NetworkHelper.ExceptPeerString = "%s/%s/%s/%s"
 NetworkHelper.Split = "[/]"
+NetworkHelper._max_message_len = 255
 NetworkHelper._receive_hooks = {}
 
 -- Technically we don't need the message identifiers anymore cause we're only sending to the peers we want to send to anyways
@@ -93,7 +94,15 @@ function NetworkHelper:SendToPeersExcept(peer_id, id, data)
 	self:SendStringThroughChat(message, table.filter(self:GetPeers(), function (peer) return except[peer:id()] == nil end))
 end
 
+---@param message string
+---@param receivers? table
 function NetworkHelper:SendStringThroughChat(message, receivers)
+	local message_len = message:len()
+	if message_len > NetworkHelper._max_message_len then
+		local message_id = string.split(message, NetworkHelper.Split, nil, 3)[2]
+		BLT:Log(LogLevel.WARN, string.format("[NetworkHelper] Message with id '%s' exceeds maximum data length of %d (%d)", message_id, NetworkHelper._max_message_len, message_len))
+	end
+
 	for _, peer in pairs(receivers or self:GetPeers()) do
 		if peer:ip_verified() then
 			peer:send("send_chat_message", NetworkHelper.HiddenChannel, message)
