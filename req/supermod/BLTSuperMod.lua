@@ -31,14 +31,17 @@ end
 
 function BLTSuperMod:init(mod, xml)
 	self._mod = mod
-
-	if mod:IsEnabled() then
-		self._assets = self.AssetLoader:new(self)
-	end
+	self._setup_callbacks = {}
 
 	self:_replace_includes(xml)
 
 	self:_load_xml(xml, {})
+end
+
+function BLTSuperMod:Setup()
+	for _, func in pairs(self._setup_callbacks) do
+		func()
+	end
 end
 
 function BLTSuperMod:GetAssetLoader()
@@ -48,33 +51,35 @@ end
 function BLTSuperMod:_load_xml(xml, parent_scope)
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
 		assets = function(tag, scope)
-			if self._assets then
-				self._assets:FromXML(tag, scope)
-			end
-			if self._mod.needs_restart == nil then
-				self._mod.needs_restart = true
-			end
+			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
+			table.insert(self._setup_callbacks, function() self:_add_assets(tag, scope) end)
 		end,
 		hooks = function(tag, scope)
-			self:_add_hooks(tag, scope)
+			table.insert(self._setup_callbacks, function() self:_add_hooks(tag, scope) end)
 		end,
 		native_module = function(tag, scope)
-			if self._mod:IsEnabled() then
-				self:_add_native_module(tag, scope)
-			end
+			table.insert(self._setup_callbacks, function() self:_add_native_module(tag, scope) end)
 		end,
 		-- These tags are used by the Wren-based XML Tweaker
 		wren = function(tag, scope)
-			if self._mod.needs_restart == nil then
-				self._mod.needs_restart = true
-			end
+			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
 		end,
 		tweak = function(tag, scope)
-			if self._mod.needs_restart == nil then
-				self._mod.needs_restart = true
-			end
+			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
 		end,
 	})
+end
+
+function BLTSuperMod:_add_assets(tag, scope)
+	if not self._mod:IsEnabled() then
+		return
+	end
+
+	if not self._assets then
+		self._assets = self.AssetLoader:new(self)
+	end
+
+	self._assets:FromXML(tag, scope)
 end
 
 function BLTSuperMod:_add_hooks(xml, parent_scope)
@@ -114,6 +119,10 @@ function BLTSuperMod:_run_entry_script(tag, scope, data_key, destination)
 end
 
 function BLTSuperMod:_add_native_module(tag, scope)
+	if not self._mod:IsEnabled() then
+		return
+	end
+
 	if scope.loading_vector == "preload" then
 		return -- Uses Wren
 	end
@@ -177,8 +186,7 @@ function BLTSuperMod._recurse_xml(xml, parent_scope, callbacks)
 				local name = val:sub(first + 2, last - first)
 				local target_var = scope[name]
 
-				assert(target_var, "Trying to use missing parameter '"
-					.. name .. "' as a #{value} in " .. tag._doc.filename)
+				assert(target_var, "Trying to use missing parameter '" .. name .. "' as a #{value} in " .. tag._doc.filename)
 
 				val = val:sub(1, first - 1) .. target_var .. val:sub(last + 1)
 			end
@@ -186,8 +194,7 @@ function BLTSuperMod._recurse_xml(xml, parent_scope, callbacks)
 			if name:sub(1,1) == ":" then
 				name = name:sub(2)
 				if not scope[name] then
-					BLT:Log(LogLevel.WARN, "Trying to append to missing parameter '" .. name
-							.. "' in " .. tag._doc.filename)
+					BLT:Log(LogLevel.WARN, "Trying to append to missing parameter '" .. name .. "' in " .. tag._doc.filename)
 				end
 				scope[name] = scope[name] .. val
 			else

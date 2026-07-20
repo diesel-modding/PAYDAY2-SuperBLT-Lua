@@ -16,12 +16,10 @@ function BLTMod:init(identifier, data, path)
 	end
 
 	self.supermod_definition = data and data.supermod_definition or "supermod.xml"
-	if not data and io.file_is_readable(path .. self.supermod_definition) then
-		data = {} -- TODO: Merge BLTSuperMod into BLTMod and read XML earlier to initialize mod data properly
-	end
-
-	if not data then
+	if not data and not io.file_is_readable(path .. self.supermod_definition) then
 		return false
+	elseif not data then
+		data = {} -- If we have no mod.txt but a supermod.xml, initialize empty data
 	end
 
 	self._errors = {}
@@ -68,6 +66,9 @@ function BLTMod:init(identifier, data, path)
 		end
 	end
 
+	-- Set up the supermod instance
+	self.supermod = BLTSuperMod.try_load(self, self.supermod_definition)
+
 	-- Return wether the mod is valid (allowed to run in VR/Non-VR)
 	local is_vr = BLT:IsVr()
 	return is_vr and not self.vr_disabled or not is_vr and not self.desktop_disabled
@@ -104,8 +105,9 @@ function BLTMod:Setup()
 		end
 	end
 
-	-- Set up the supermod instance
-	self.supermod = BLTSuperMod.try_load(self, self.supermod_definition)
+	if self.supermod then
+		self.supermod:Setup()
+	end
 end
 
 function BLTMod:AddHooks(data_key, destination, wildcards_destination)
