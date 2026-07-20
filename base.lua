@@ -1,14 +1,11 @@
--- Only run if we have the global table
 if not _G then
 	return
 end
 
--- Localise globals
 local _G = _G
 local io = io
 local file = file
 
--- Log levels
 _G.LogLevel = {
 	NONE = 0,
 	ERROR = 1,
@@ -17,20 +14,14 @@ _G.LogLevel = {
 	ALL = 4
 }
 
-_G.LogLevelPrefix = {
-	[LogLevel.ERROR] = "[ERROR]",
-	[LogLevel.WARN] = "[WARN]",
-	[LogLevel.INFO] = "[INFO]"
+_G.BLT = {
+	version = 2.0,
+	Base = {},
+	_PATH = "mods/base/"
 }
 
--- BLT Global table
-_G.BLT = { version = 2.0 }
-_G.BLT.Base = {}
-
--- Load modules
-_G.BLT._PATH = "mods/base/"
 function BLT:Require(path)
-	dofile(string.format("%s%s", BLT._PATH, path .. ".lua"))
+	dofile(BLT._PATH .. path .. ".lua")
 end
 
 BLT:Require("req/utils/UtilsClass")
@@ -55,6 +46,12 @@ BLT:Require("req/BLTKeybindsManager")
 BLT:Require("req/BLTAssetManager")
 BLT:Require("req/xaudio/XAudio")
 
+local log_level_prefix = {
+	[LogLevel.ERROR] = "[ERROR]",
+	[LogLevel.WARN] = "[WARN]",
+	[LogLevel.INFO] = "[INFO]"
+}
+
 ---Writes a message to the log file
 ---Multiple arguments can be passed to the function and will be concatenated
 ---@param level integer @The log level of the message
@@ -64,7 +61,7 @@ function BLT:Log(level, ...)
 		return
 	end
 
-	local out = { LogLevelPrefix[level] or "", ... }
+	local out = { log_level_prefix[level] or "", ... }
 	local n = select("#", ...) -- allow nil holes
 	-- skip prefix, allow for n=0
 	for i = 2, n + 1, 1 do

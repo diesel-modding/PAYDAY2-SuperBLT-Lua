@@ -49,7 +49,36 @@ function BLTSuperMod:GetAssetLoader()
 end
 
 function BLTSuperMod:_load_xml(xml, parent_scope)
+	-- Handle params of the main XML node
+	local function get_value(val) return val end
+	local function get_number(val) return tonumber(val) end
+	local function get_boolean(val) return val == "true" end
+	local mapping_func = {
+		name = get_value,
+		desc = get_value,
+		version = get_value,
+		blt_version = get_value,
+		author = get_value,
+		contact = get_value,
+		priority = get_number,
+		color = get_value,
+		image_path = get_value,
+		disable_safe_mode = get_boolean,
+		undisablable = get_boolean,
+		library = get_boolean,
+		vr_disabled = get_boolean,
+		desktop_disabled = get_boolean,
+		needs_restart = get_boolean
+	}
+	for param, val in pairs(xml.params) do
+		if mapping_func[param] then
+			local new_val = mapping_func[param](val)
+			self._mod[param] = new_val == nil and self._mod[param] or new_val
+		end
+	end
+
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
+		-- TODO: dependencies, updates, keybinds
 		assets = function(tag, scope)
 			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
 			table.insert(self._setup_callbacks, function() self:_add_assets(tag, scope) end)
