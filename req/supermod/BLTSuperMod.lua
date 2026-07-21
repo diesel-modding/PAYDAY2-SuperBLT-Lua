@@ -78,7 +78,15 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 	end
 
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		-- TODO: dependencies, updates, keybinds
+		dependencies = function(tag, scope)
+			self:_add_dependencies(tag, scope)
+		end,
+		updates = function(tag, scope)
+			self:_add_updates(tag, scope)
+		end,
+		keybinds = function(tag, scope)
+			self:_add_keybinds(tag, scope)
+		end,
 		assets = function(tag, scope)
 			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
 			table.insert(self._setup_callbacks, function() self:_add_assets(tag, scope) end)
@@ -97,6 +105,21 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
 		end,
 	})
+end
+
+function BLTSuperMod:_add_dependencies(tag, scope)
+	-- TODO
+	BLT:Log(LogLevel.ERROR, "[BLT] Supermod dependencies are not implemented yet!")
+end
+
+function BLTSuperMod:_add_updates(tag, scope)
+	-- TODO
+	BLT:Log(LogLevel.ERROR, "[BLT] Supermod updates are not implemented yet!")
+end
+
+function BLTSuperMod:_add_keybinds(tag, scope)
+	-- TODO
+	BLT:Log(LogLevel.ERROR, "[BLT] Supermod keybinds are not implemented yet!")
 end
 
 function BLTSuperMod:_add_assets(tag, scope)
@@ -205,7 +228,7 @@ end
 function BLTSuperMod._recurse_xml(xml, parent_scope, callbacks)
 	for _, tag in ipairs(xml) do
 		local scope = {}
-		setmetatable(scope, {__index = parent_scope})
+		setmetatable(scope, { __index = parent_scope })
 
 		for name, val in pairs(tag.params) do
 			while true do
@@ -220,7 +243,7 @@ function BLTSuperMod._recurse_xml(xml, parent_scope, callbacks)
 				val = val:sub(1, first - 1) .. target_var .. val:sub(last + 1)
 			end
 
-			if name:sub(1,1) == ":" then
+			if name:sub(1, 1) == ":" then
 				name = name:sub(2)
 				if not scope[name] then
 					BLT:Log(LogLevel.WARN, "Trying to append to missing parameter '" .. name .. "' in " .. tag._doc.filename)
