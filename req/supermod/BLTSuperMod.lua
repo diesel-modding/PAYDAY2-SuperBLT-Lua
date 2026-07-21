@@ -50,19 +50,10 @@ end
 
 function BLTSuperMod:_load_xml(xml, parent_scope)
 	-- Handle params of the main XML node
-	local function get_value(val) return val end
 	local function get_number(val) return tonumber(val) end
 	local function get_boolean(val) return val == "true" end
 	local mapping_func = {
-		name = get_value,
-		desc = get_value,
-		version = get_value,
-		blt_version = get_value,
-		author = get_value,
-		contact = get_value,
 		priority = get_number,
-		color = get_value,
-		image_path = get_value,
 		disable_safe_mode = get_boolean,
 		undisablable = get_boolean,
 		library = get_boolean,
@@ -70,10 +61,12 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 		desktop_disabled = get_boolean,
 		needs_restart = get_boolean
 	}
-	for param, val in pairs(xml.params) do
-		if mapping_func[param] then
-			local new_val = mapping_func[param](val)
-			self._mod[param] = new_val == nil and self._mod[param] or new_val
+	for k, v in pairs(xml.params) do
+		if mapping_func[k] then
+			v = mapping_func[k](v)
+		end
+		if self._mod[k] == nil or type(self._mod[k]) == type(v) then
+			self._mod[k] = v
 		end
 	end
 
@@ -85,7 +78,7 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 			self:_add_updates(tag, scope)
 		end,
 		keybinds = function(tag, scope)
-			self:_add_keybinds(tag, scope)
+			table.insert(self._setup_callbacks, function() self:_add_keybinds(tag, scope) end)
 		end,
 		assets = function(tag, scope)
 			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
@@ -103,23 +96,88 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 		end,
 		tweak = function(tag, scope)
 			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
-		end,
+		end
 	})
 end
 
-function BLTSuperMod:_add_dependencies(tag, scope)
-	-- TODO
-	BLT:Log(LogLevel.ERROR, "[BLT] Supermod dependencies are not implemented yet!")
+function BLTSuperMod:_add_dependencies(xml, parent_scope)
+	BLTSuperMod._recurse_xml(xml, parent_scope, {
+		dependency = function(tag, scope)
+			self:_add_dependency(tag, scope)
+		end
+	})
 end
 
-function BLTSuperMod:_add_updates(tag, scope)
-	-- TODO
-	BLT:Log(LogLevel.ERROR, "[BLT] Supermod updates are not implemented yet!")
+function BLTSuperMod:_add_dependency(tag, scope)
+	if not tag.params.identifier then
+		BLT:Log(LogLevel.ERROR, string.format("[BLT] Invalid dependency definition in mod %s", self._mod:GetName()))
+		return
+	end
+
+	self._mod.dependencies[tag.params.identifier] = tag.params
 end
 
-function BLTSuperMod:_add_keybinds(tag, scope)
-	-- TODO
-	BLT:Log(LogLevel.ERROR, "[BLT] Supermod keybinds are not implemented yet!")
+function BLTSuperMod:_add_updates(xml, parent_scope)
+	BLTSuperMod._recurse_xml(xml, parent_scope, {
+		update = function(tag, scope)
+			self:_add_update(tag, scope)
+		end
+	})
+end
+
+function BLTSuperMod:_add_update(tag, scope)
+	local convert_bool = {
+		disallow_update = true,
+		hash_file = true,
+		critical = true
+	}
+	local update_data = {}
+	for k, v in pairs(tag.params) do
+		if convert_bool[k] then
+			update_data[k] = v == "true"
+		else
+			update_data[k] = v
+		end
+	end
+
+	if update_data.meta then
+		update_data.host = {
+			meta = update_data.meta,
+			download = update_data.download,
+			patchnotes = update_data.patchnotes
+		}
+	end
+
+	table.insert(self._mod.raw_updates, update_data)
+end
+
+function BLTSuperMod:_add_keybinds(xml, parent_scope)
+	BLTSuperMod._recurse_xml(xml, parent_scope, {
+		keybind = function(tag, scope)
+			self:_add_keybind(tag, scope)
+		end
+	})
+end
+
+function BLTSuperMod:_add_keybind(tag, scope)
+	local function get_boolean(val) return val == "true" end
+	local mapping_func = {
+		run_in_menu = get_boolean,
+		run_in_game = get_boolean,
+		show_in_menu = get_boolean,
+		localized = get_boolean
+	}
+	local keybind_data = {}
+	for k, v in pairs(tag.params) do
+		if mapping_func[k] then
+			v = mapping_func[k](v)
+		end
+		keybind_data[k] = v
+	end
+
+	if BLT.Keybinds then
+		BLT.Keybinds:register_keybind_json(self._mod, keybind_data)
+	end
 end
 
 function BLTSuperMod:_add_assets(tag, scope)

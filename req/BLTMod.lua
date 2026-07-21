@@ -46,28 +46,28 @@ function BLTMod:init(identifier, data, path)
 	self.vr_disabled = data.vr_disabled or false
 	self.desktop_disabled = data.desktop_disabled or false
 	self.needs_restart = data.needs_restart or nil
-
-	-- Updates data
+	self.raw_updates = data.updates or {} -- Temporary table to save update data to, to allow Supermod to add to it
 	self.updates = {}
-	if data.updates then
-		for i, update_data in ipairs(data.updates) do
-			if not update_data.host then
-				-- Old PaydayMods update, server is gone so don't update those
-				-- Do keep track of what we have installed though, for dependencies
-				if update_data.identifier then -- sanity check
-					self._legacy_updates[update_data.identifier] = true
-				end
-			else
-				local new_update, valid = BLTUpdate:new(self, update_data)
-				if valid and new_update:IsPresent() then
-					table.insert(self.updates, new_update)
-				end
-			end
-		end
-	end
 
 	-- Set up the supermod instance
 	self.supermod = BLTSuperMod.try_load(self, self.supermod_definition)
+
+	-- Process the update data
+	for _, update_data in ipairs(self.raw_updates) do
+		if not update_data.host then
+			-- Old PaydayMods update, server is gone so don't update those
+			-- Do keep track of what we have installed though, for dependencies
+			if update_data.identifier then -- sanity check
+				self._legacy_updates[update_data.identifier] = true
+			end
+		else
+			local new_update, valid = BLTUpdate:new(self, update_data)
+			if valid and new_update:IsPresent() then
+				table.insert(self.updates, new_update)
+			end
+		end
+	end
+	self.raw_updates = {} -- Clear table after processing
 
 	-- Return wether the mod is valid (allowed to run in VR/Non-VR)
 	local is_vr = BLT:IsVr()
