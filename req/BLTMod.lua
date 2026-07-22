@@ -104,21 +104,19 @@ function BLTMod:Setup()
 		end
 	end
 
+	-- Setup BLTSuperMod (Load assets)
 	if self.supermod then
 		self.supermod:Setup()
 	end
 
-	if not self:IsEnabled() then
-		return
-	end
-
+	-- Load native modules
 	for i, module_data in ipairs(self.raw_data.native_modules or {}) do
 		self:LoadNativeModule(module_data)
 	end
 
 	-- Run entry scripts
 	for i, script_data in ipairs(self.raw_data.entry_scripts or {}) do
-		BLT:RunHookFile(script_data.script_path, { mod = self, script = script_data.script_path })
+		self:RunEntryScript(script_data)
 	end
 end
 
@@ -171,6 +169,10 @@ function BLTMod:AddPersistScript(global, file)
 end
 
 function BLTMod:LoadNativeModule(module_data)
+	if not self:IsEnabled() then
+		return
+	end
+
 	if module_data.loading_vector == "preload" then
 		return -- Uses Wren
 	end
@@ -187,6 +189,17 @@ function BLTMod:LoadNativeModule(module_data)
 
 	BLT:Log(LogLevel.INFO, string.format("[BLT] Loading native module for '%s'", self:GetName()))
 	blt.load_native(self:GetPath() .. module_data.filename)
+end
+
+function BLTMod:RunEntryScript(script_data)
+	if not self:IsEnabled() then
+		return
+	end
+
+	BLT:RunHookFile(script_data.script_path, {
+		mod = self,
+		script = script_data.script_path
+	})
 end
 
 function BLTMod:GetHooks()

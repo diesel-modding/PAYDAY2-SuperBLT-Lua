@@ -66,29 +66,33 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 		if mapping_func[k] then
 			v = mapping_func[k](v)
 		end
-		if self._mod.raw_data[k] == nil or type(self._mod.raw_data[k]) == type(v) then
-			self._mod.raw_data[k] = v
-		end
+		self._mod.raw_data[k] = v
 	end
 
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
 		dependencies = function(tag, scope)
 			self:_add_dependencies(tag, scope)
 		end,
+		dependency = function(tag, scope)
+			self:_add_dependency(tag, scope)
+		end,
 		updates = function(tag, scope)
 			self:_add_updates(tag, scope)
 		end,
+		update = function(tag, scope)
+			self:_add_update(tag, scope)
+		end,
 		keybinds = function(tag, scope)
 			self:_add_keybinds(tag, scope)
+		end,
+		keybind = function(tag, scope)
+			self:_add_keybind(tag, scope)
 		end,
 		assets = function(tag, scope)
 			self:_add_assets(tag, scope)
 		end,
 		hooks = function(tag, scope)
 			self:_add_hooks(tag, scope)
-		end,
-		persist_scripts = function(tag, scope)
-			self:_add_persist_scripts(tag, scope)
 		end,
 		native_module = function(tag, scope)
 			self:_add_native_module(tag, scope)
@@ -209,8 +213,8 @@ function BLTSuperMod:_add_hooks(xml, parent_scope)
 		entry = function(tag, scope)
 			self:_add_entry_script(tag, scope)
 		end,
-		wildcard = function(tag, scope)
-			BLT:Log(LogLevel.ERROR, "Wildcard hooks are not implemented yet!")
+		persist = function(tag, scope)
+			self:_add_persist_script(tag, scope)
 		end
 	})
 end
@@ -228,14 +232,6 @@ end
 function BLTSuperMod:_add_entry_script(tag, scope)
 	self._mod.raw_data.entry_scripts = self._mod.raw_data.entry_scripts or {}
 	table.insert(self._mod.raw_data.entry_scripts, scope)
-end
-
-function BLTSuperMod:_add_persist_scripts(xml, parent_scope)
-	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		script = function(tag, scope)
-			self:_add_persist_script(tag, scope)
-		end
-	})
 end
 
 function BLTSuperMod:_add_persist_script(tag, scope)
