@@ -82,7 +82,6 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 			self:_add_keybinds(tag, scope)
 		end,
 		assets = function(tag, scope)
-			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
 			self:_add_assets(tag, scope)
 		end,
 		hooks = function(tag, scope)
@@ -184,6 +183,8 @@ function BLTSuperMod:_add_keybind(tag, scope)
 end
 
 function BLTSuperMod:_add_assets(tag, scope)
+	self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
+
 	table.insert(self._setup_callbacks, function()
 		if not self._mod:IsEnabled() then
 			return
@@ -206,7 +207,7 @@ function BLTSuperMod:_add_hooks(xml, parent_scope)
 			self:_add_hook(tag, scope, "hooks")
 		end,
 		entry = function(tag, scope)
-			self:_run_entry_script(tag, scope)
+			self:_add_entry_script(tag, scope)
 		end,
 		wildcard = function(tag, scope)
 			BLT:Log(LogLevel.ERROR, "Wildcard hooks are not implemented yet!")
@@ -224,17 +225,9 @@ function BLTSuperMod:_add_hook(tag, scope, data_key)
 	table.insert(self._mod.raw_data[data_key], scope)
 end
 
-function BLTSuperMod:_run_entry_script(tag, scope)
-	table.insert(self._setup_callbacks, function()
-		if not self._mod:IsEnabled() then
-			return
-		end
-
-		BLT:RunHookFile(scope.script_path, {
-			mod = self._mod,
-			script = scope.script_path
-		})
-	end)
+function BLTSuperMod:_add_entry_script(tag, scope)
+	self._mod.raw_data.entry_scripts = self._mod.raw_data.entry_scripts or {}
+	table.insert(self._mod.raw_data.entry_scripts, scope)
 end
 
 function BLTSuperMod:_add_persist_scripts(xml, parent_scope)
@@ -251,28 +244,8 @@ function BLTSuperMod:_add_persist_script(tag, scope)
 end
 
 function BLTSuperMod:_add_native_module(tag, scope)
-	table.insert(self._setup_callbacks, function()
-		if not self._mod:IsEnabled() then
-			return
-		end
-
-		if scope.loading_vector == "preload" then
-			return -- Uses Wren
-		end
-
-		if not blt.load_native or not blt.blt_info then
-			BLT:Log(LogLevel.ERROR, string.format("[BLT] Cannot load native module for '%s' (functionality missing)", self._mod:GetName()))
-			return
-		end
-
-		if blt.blt_info().platform ~= scope.platform then
-			BLT:Log(LogLevel.ERROR, string.format("[BLT] Incorrect platform for native module for '%s'", self._mod:GetName()))
-			return
-		end
-
-		BLT:Log(LogLevel.INFO, string.format("[BLT] Loading native module for '%s'", self._mod:GetName()))
-		blt.load_native(self._mod:GetPath() .. scope.filename)
-	end)
+	self._mod.raw_data.native_modules = self._mod.raw_data.native_modules or {}
+	table.insert(self._mod.raw_data.native_modules, scope)
 end
 
 function BLTSuperMod:_replace_includes(xml)

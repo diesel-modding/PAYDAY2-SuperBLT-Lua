@@ -107,6 +107,19 @@ function BLTMod:Setup()
 	if self.supermod then
 		self.supermod:Setup()
 	end
+
+	if not self:IsEnabled() then
+		return
+	end
+
+	for i, module_data in ipairs(self.raw_data.native_modules or {}) do
+		self:LoadNativeModule(module_data)
+	end
+
+	-- Run entry scripts
+	for i, script_data in ipairs(self.raw_data.entry_scripts or {}) do
+		BLT:RunHookFile(script_data.script_path, { mod = self, script = script_data.script_path })
+	end
 end
 
 function BLTMod:AddHooks(data_key, destination, wildcards_destination)
@@ -155,6 +168,25 @@ function BLTMod:AddPersistScript(global, file)
 		global = global,
 		file = file
 	})
+end
+
+function BLTMod:LoadNativeModule(module_data)
+	if module_data.loading_vector == "preload" then
+		return -- Uses Wren
+	end
+
+	if not blt.load_native or not blt.blt_info then
+		BLT:Log(LogLevel.ERROR, string.format("[BLT] Cannot load native module for '%s' (functionality missing)", self:GetName()))
+		return
+	end
+
+	if blt.blt_info().platform ~= module_data.platform then
+		BLT:Log(LogLevel.INFO, string.format("[BLT] Incorrect platform for native module for '%s' (%s)", self:GetName(), tostring(module_data.platform)))
+		return
+	end
+
+	BLT:Log(LogLevel.INFO, string.format("[BLT] Loading native module for '%s'", self:GetName()))
+	blt.load_native(self:GetPath() .. module_data.filename)
 end
 
 function BLTMod:GetHooks()
