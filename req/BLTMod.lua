@@ -28,7 +28,11 @@ function BLTMod:init(identifier, data, path)
 	-- Mod information
 	self.id = identifier
 	self.json_data = data
+	self.raw_data = data
 	self.path = path
+
+	-- Set up the supermod instance
+	self.supermod = BLTSuperMod.try_load(self, self.supermod_definition)
 
 	self.name = data.name or identifier
 	self.desc = data.description or "No description"
@@ -46,14 +50,10 @@ function BLTMod:init(identifier, data, path)
 	self.vr_disabled = data.vr_disabled or false
 	self.desktop_disabled = data.desktop_disabled or false
 	self.needs_restart = data.needs_restart or nil
-	self.raw_updates = data.updates or {} -- Temporary table to save update data to, to allow Supermod to add to it
 	self.updates = {}
 
-	-- Set up the supermod instance
-	self.supermod = BLTSuperMod.try_load(self, self.supermod_definition)
-
 	-- Process the update data
-	for _, update_data in ipairs(self.raw_updates) do
+	for _, update_data in ipairs(self.raw_data.updates or {}) do
 		if not update_data.host then
 			-- Old PaydayMods update, server is gone so don't update those
 			-- Do keep track of what we have installed though, for dependencies
@@ -67,7 +67,6 @@ function BLTMod:init(identifier, data, path)
 			end
 		end
 	end
-	self.raw_updates = {} -- Clear table after processing
 
 	-- Return wether the mod is valid (allowed to run in VR/Non-VR)
 	local is_vr = BLT:IsVr()
@@ -93,13 +92,13 @@ function BLTMod:Setup()
 
 	-- Keybinds
 	if BLT.Keybinds then
-		for i, keybind_data in ipairs(self.json_data.keybinds or {}) do
+		for i, keybind_data in ipairs(self.raw_data.keybinds or {}) do
 			BLT.Keybinds:register_keybind_json(self, keybind_data)
 		end
 	end
 
 	-- Persist Scripts
-	for i, persist_data in ipairs(self.json_data.persist_scripts or {}) do
+	for i, persist_data in ipairs(self.raw_data.persist_scripts or {}) do
 		if persist_data and persist_data.global and persist_data.script_path then
 			self:AddPersistScript(persist_data.global, persist_data.script_path)
 		end
@@ -111,7 +110,7 @@ function BLTMod:Setup()
 end
 
 function BLTMod:AddHooks(data_key, destination, wildcards_destination)
-	for i, hook_data in ipairs(self.json_data[data_key] or {}) do
+	for i, hook_data in ipairs(self.raw_data[data_key] or {}) do
 		local hook_id = hook_data.hook_id and hook_data.hook_id:lower()
 		local script = hook_data.script_path
 
@@ -216,7 +215,9 @@ function BLTMod:GetDir()
 	return dir
 end
 
+---@deprecated
 function BLTMod:GetJsonData()
+	BLT:DeprecationWarning("BLTMod.GetJsonData")
 	return self.json_data
 end
 
