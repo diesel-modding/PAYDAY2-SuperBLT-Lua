@@ -70,33 +70,16 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 	end
 
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		dependencies = function(tag, scope)
-			self:_add_dependencies(tag, scope)
-		end,
-		dependency = function(tag, scope)
-			self:_add_dependency(tag, scope)
-		end,
-		updates = function(tag, scope)
-			self:_add_updates(tag, scope)
-		end,
-		update = function(tag, scope)
-			self:_add_update(tag, scope)
-		end,
-		keybinds = function(tag, scope)
-			self:_add_keybinds(tag, scope)
-		end,
-		keybind = function(tag, scope)
-			self:_add_keybind(tag, scope)
-		end,
-		assets = function(tag, scope)
-			self:_add_assets(tag, scope)
-		end,
-		hooks = function(tag, scope)
-			self:_add_hooks(tag, scope)
-		end,
-		native_module = function(tag, scope)
-			self:_add_native_module(tag, scope)
-		end,
+		dependencies = function(tag, scope) self:_add_dependencies(tag, scope) end,
+		dependency = function(tag, scope) self:_add_dependency(tag, scope) end,
+		updates = function(tag, scope) self:_add_updates(tag, scope) end,
+		update = function(tag, scope) self:_add_update(tag, scope) end,
+		keybinds = function(tag, scope) self:_add_keybinds(tag, scope) end,
+		keybind = function(tag, scope) self:_add_keybind(tag, scope) end,
+		assets = function(tag, scope) self:_add_assets(tag, scope) end,
+		hooks = function(tag, scope) self:_add_hooks(tag, scope) end,
+		native_modules = function(tag, scope) self:_add_native_modules(tag, scope) end,
+		native_module = function(tag, scope) self:_add_native_module(tag, scope) end,
 		-- These tags are used by the Wren-based XML Tweaker
 		wren = function(tag, scope)
 			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
@@ -109,9 +92,7 @@ end
 
 function BLTSuperMod:_add_dependencies(xml, parent_scope)
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		dependency = function(tag, scope)
-			self:_add_dependency(tag, scope)
-		end
+		dependency = function(tag, scope) self:_add_dependency(tag, scope) end
 	})
 end
 
@@ -127,9 +108,7 @@ end
 
 function BLTSuperMod:_add_updates(xml, parent_scope)
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		update = function(tag, scope)
-			self:_add_update(tag, scope)
-		end
+		update = function(tag, scope) self:_add_update(tag, scope) end
 	})
 end
 
@@ -161,9 +140,7 @@ end
 
 function BLTSuperMod:_add_keybinds(xml, parent_scope)
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		keybind = function(tag, scope)
-			self:_add_keybind(tag, scope)
-		end
+		keybind = function(tag, scope) self:_add_keybind(tag, scope) end
 	})
 end
 
@@ -204,18 +181,10 @@ end
 
 function BLTSuperMod:_add_hooks(xml, parent_scope)
 	BLTSuperMod._recurse_xml(xml, parent_scope, {
-		pre = function(tag, scope)
-			self:_add_hook(tag, scope, "pre_hooks")
-		end,
-		post = function(tag, scope)
-			self:_add_hook(tag, scope, "hooks")
-		end,
-		entry = function(tag, scope)
-			self:_add_entry_script(tag, scope)
-		end,
-		persist = function(tag, scope)
-			self:_add_persist_script(tag, scope)
-		end
+		pre = function(tag, scope) self:_add_hook(tag, scope, "pre_hooks") end,
+		post = function(tag, scope) self:_add_hook(tag, scope, "hooks") end,
+		entry = function(tag, scope) self:_add_entry_script(tag, scope) end,
+		persist = function(tag, scope) self:_add_persist_script(tag, scope) end
 	})
 end
 
@@ -237,6 +206,12 @@ end
 function BLTSuperMod:_add_persist_script(tag, scope)
 	self._mod.raw_data.persist_scripts = self._mod.raw_data.persist_scripts or {}
 	table.insert(self._mod.raw_data.persist_scripts, scope)
+end
+
+function BLTSuperMod:_add_native_modules(xml, parent_scope)
+	BLTSuperMod._recurse_xml(xml, parent_scope, {
+		native_module = function(tag, scope) self:_add_native_module(tag, scope) end
+	})
 end
 
 function BLTSuperMod:_add_native_module(tag, scope)
