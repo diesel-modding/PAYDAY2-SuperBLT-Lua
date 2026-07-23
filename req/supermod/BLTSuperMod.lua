@@ -126,14 +126,6 @@ function BLTSuperMod:_add_update(tag, scope)
 		update_data[k] = v
 	end
 
-	if update_data.meta then
-		update_data.host = {
-			meta = update_data.meta,
-			download = update_data.download,
-			patchnotes = update_data.patchnotes
-		}
-	end
-
 	self._mod.raw_data.updates = self._mod.raw_data.updates or {}
 	table.insert(self._mod.raw_data.updates, update_data)
 end

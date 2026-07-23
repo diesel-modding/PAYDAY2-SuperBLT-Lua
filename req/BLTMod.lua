@@ -54,17 +54,11 @@ function BLTMod:init(identifier, data, path)
 
 	-- Process the update data
 	for _, update_data in ipairs(self.raw_data.updates or {}) do
-		if not update_data.host then
-			-- Old PaydayMods update, server is gone so don't update those
-			-- Do keep track of what we have installed though, for dependencies
-			if update_data.identifier then -- sanity check
-				self._legacy_updates[update_data.identifier] = true
-			end
-		else
-			local new_update, valid = BLTUpdate:new(self, update_data)
-			if valid and new_update:IsPresent() then
-				table.insert(self.updates, new_update)
-			end
+		local new_update, valid = BLTUpdate:new(self, update_data)
+		if valid and new_update:IsPresent() then
+			table.insert(self.updates, new_update)
+		elseif not valid and update_data.identifier then
+			self._legacy_updates[update_data.identifier] = true
 		end
 	end
 
