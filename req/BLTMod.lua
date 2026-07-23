@@ -80,7 +80,6 @@ function BLTMod:Setup()
 	end
 
 	-- Hooks data
-	self.hooks = {}
 	self:AddHooks("hooks", BLT.hook_tables.post, BLT.hook_tables.wildcards)
 	self:AddHooks("pre_hooks", BLT.hook_tables.pre, BLT.hook_tables.wildcards)
 
@@ -124,33 +123,20 @@ function BLTMod:AddHooks(data_key, destination, wildcards_destination)
 end
 
 function BLTMod:AddHook(data_key, hook_id, script, destination, wildcards_destination)
-	self.hooks[data_key] = self.hooks[data_key] or {}
-
-	-- Add hook to info table
-	local unique = true
-	for i, hook in ipairs(self.hooks[data_key]) do
-		if hook == hook_id then
-			unique = false
-			break
-		end
-	end
-	if unique then
-		table.insert(self.hooks[data_key], hook_id)
+	if not hook_id or not script or not self:IsEnabled() then
+		return
 	end
 
-	-- Add hook to hooks tables
-	if hook_id and script and self:IsEnabled() then
-		local data = {
-			mod = self,
-			script = script
-		}
+	local data = {
+		mod = self,
+		script = script
+	}
 
-		if hook_id ~= "*" then
-			destination[hook_id] = destination[hook_id] or {}
-			table.insert(destination[hook_id], data)
-		else
-			table.insert(wildcards_destination, data)
-		end
+	if hook_id ~= "*" then
+		destination[hook_id] = destination[hook_id] or {}
+		table.insert(destination[hook_id], data)
+	else
+		table.insert(wildcards_destination, data)
 	end
 end
 
@@ -197,15 +183,23 @@ function BLTMod:RunEntryScript(script_data)
 end
 
 function BLTMod:GetHooks()
-	return (self.hooks or {}).hooks
+	return self.raw_data.hooks or {}
 end
 
 function BLTMod:GetPreHooks()
-	return (self.hooks or {}).pre_hooks
+	return self.raw_data.pre_hooks or {}
 end
 
 function BLTMod:GetPersistScripts()
-	return self._persists or {}
+	return self.raw_data.persist_scripts or {}
+end
+
+function BLTMod:GetEntryScripts()
+	return self.raw_data.entry_scripts or {}
+end
+
+function BLTMod:GetNativeModules()
+	return self.raw_data.native_modules or {}
 end
 
 function BLTMod:Errors()
@@ -537,23 +531,24 @@ function BLTMod:GetDeveloperInfo()
 		str = str .. "\n"
 	end
 
-	local hooks = self:GetHooks() or {}
-	local prehooks = self:GetPreHooks() or {}
-	local persists = self:GetPersistScripts() or {}
+	local hooks = self:GetHooks()
+	local prehooks = self:GetPreHooks()
+	local persists = self:GetPersistScripts()
+	local entries = self:GetEntryScripts()
+	local native = self:GetNativeModules()
 
 	append("Path:", self:GetPath())
 	append("Load Priority:", self:GetPriority())
 	append("Version:", self:GetVersion())
 	append("BLT-Version:", self:GetBLTVersion())
 	append("Disablable:", not self:IsUndisablable())
-	append("Allow Safe Mode:", not self:DisableSafeMode())
 
 	if table.size(hooks) < 1 then
 		append("No Hooks")
 	else
 		append("Hooks:")
 		for _, hook in ipairs(hooks) do
-			append("   ", tostring(hook))
+			append("   ", hook.hook_id, "->", hook.script_path)
 		end
 	end
 
@@ -562,16 +557,34 @@ function BLTMod:GetDeveloperInfo()
 	else
 		append("Pre-Hooks:")
 		for _, hook in ipairs(prehooks) do
-			append("   ", tostring(hook))
+			append("   ", hook.hook_id, "->", hook.script_path)
 		end
 	end
 
 	if table.size(persists) < 1 then
-		append("No Persisent Scripts")
+		append("No Persist Scripts")
 	else
-		append("Persisent Scripts:")
+		append("Persist Scripts:")
 		for _, script in ipairs(persists) do
-			append("   ", script.global, "->", script.file)
+			append("   ", script.global, "->", script.script_path)
+		end
+	end
+
+	if table.size(entries) < 1 then
+		append("No Entry Scripts")
+	else
+		append("Entry Scripts:")
+		for _, script in ipairs(entries) do
+			append("   ", script.script_path)
+		end
+	end
+
+	if table.size(native) < 1 then
+		append("No Native Modules")
+	else
+		append("Native Modules:")
+		for _, module in ipairs(native) do
+			append("   ", module.filename .. " (" .. module.platform .. ")")
 		end
 	end
 

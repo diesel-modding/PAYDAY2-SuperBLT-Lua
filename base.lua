@@ -6,7 +6,8 @@ local _G = _G
 local io = io
 local file = file
 
-_G.LogLevel = {
+---@enum LogLevel
+LogLevel = {
 	NONE = 0,
 	ERROR = 1,
 	WARN = 2,
@@ -14,8 +15,9 @@ _G.LogLevel = {
 	ALL = 4
 }
 
-_G.BLT = {
-	version = 2.0,
+---@class BLT
+BLT = {
+	version = "2.0",
 	Base = {},
 	_PATH = "mods/base/"
 }
