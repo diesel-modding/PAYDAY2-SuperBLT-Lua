@@ -39,7 +39,7 @@ function BLTUpdate:init(parent_mod, data)
 	provider_data.patchnotes = provider_data.patchnotes or data.patchnotes
 
 	local provider = BLTUpdate.providers[provider_data.provider]
-	if not provider then
+	if not provider or not provider.meta and not provider_data.meta then
 		BLT:Log(LogLevel.ERROR, string.format("[Updates] Invalid update provider for '%s' (%s)", self.id, self.name))
 		return false
 	end
