@@ -50,7 +50,7 @@ function BLTUpdate:init(parent_mod, data)
 	self.provider = setmetatable(provider_data, { __index = provider })
 
 	if not self.provider:get_url("meta") then
-		BLT:Log(LogLevel.ERROR, string.format("[Updates] Missing meta for '%s' (%s)", provider_name, self.id, self.name))
+		BLT:Log(LogLevel.ERROR, string.format("[Updates] Missing meta in provider '%s' for '%s' (%s)", provider_name, self.id, self.name))
 		return false
 	end
 
