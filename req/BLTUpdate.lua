@@ -3,26 +3,28 @@
 BLTUpdate = blt_class()
 BLTUpdate.enabled = true
 BLTUpdate.revision = 1
+ -- These should be moved into their own classes ideally to encapsulate their functionality
 BLTUpdate.providers = {
 	mws = {
-		format_url = true,
+		get_url = function(self, type) return self[type] and string.format(self[type], self.id) or nil end,
 		meta = "https://api.modworkshop.net/mods/%s/version",
 		download = "https://api.modworkshop.net/mods/%s/download",
 		patchnotes = "https://modworkshop.net/mod/%s?tab=changelog",
-		clbk_func = "clbk_got_update_data_simple"
+		clbk_func = "clbk_got_update_data_version"
 	},
 	default = {
+		get_url = function(self, type) return self[type] end,
 		clbk_func = "clbk_got_update_data_default"
 	}
 }
 
 function BLTUpdate:init(parent_mod, data)
-	if not parent_mod or not data then
+	if not parent_mod or not data or not data.identifier then
 		return false
 	end
 
 	self.parent_mod = parent_mod
-	self.id = data.identifier or ""
+	self.id = data.identifier
 	self.name = data.display_name or parent_mod:GetName()
 	self.dir = data.install_dir or parent_mod:GetDir()
 	self.folder = data.install_folder or parent_mod:GetId()
@@ -33,18 +35,24 @@ function BLTUpdate:init(parent_mod, data)
 
 	-- Set up provider from legacy host data
 	local provider_data = data.host or {}
-	provider_data.provider = provider_data.provider or data.provider or "default"
+	local provider_name = provider_data.provider or data.provider or "default"
+	provider_data.id = self.id
 	provider_data.meta = provider_data.meta or data.meta
 	provider_data.download = provider_data.download or data.download
 	provider_data.patchnotes = provider_data.patchnotes or data.patchnotes
 
-	local provider = BLTUpdate.providers[provider_data.provider]
-	if not provider or not provider.meta and not provider_data.meta then
-		BLT:Log(LogLevel.ERROR, string.format("[Updates] Invalid update provider for '%s' (%s)", self.id, self.name))
+	local provider = BLTUpdate.providers[provider_name]
+	if not provider then
+		BLT:Log(LogLevel.ERROR, string.format("[Updates] Invalid update provider '%s' for '%s' (%s)", provider_name, self.id, self.name))
 		return false
 	end
 
 	self.provider = setmetatable(provider_data, { __index = provider })
+
+	if not self.provider:get_url("meta") then
+		BLT:Log(LogLevel.ERROR, string.format("[Updates] Missing meta for '%s' (%s)", provider_name, self.id, self.name))
+		return false
+	end
 
 	return true
 end
@@ -68,12 +76,7 @@ end
 function BLTUpdate:CheckForUpdates(finished_clbk)
 	self._requesting_updates = true
 
-	local url = self.provider.meta
-	if self.provider.format_url then
-		url = string.format(url, self.id)
-	end
-
-	dohttpreq(url, function(data, http_id, request_info)
+	dohttpreq(self.provider:get_url("meta"), function(data, http_id, request_info)
 		self._requesting_updates = false
 
 		if not request_info.querySucceeded or string.is_nil_or_empty(data) then
@@ -88,22 +91,15 @@ function BLTUpdate:CheckForUpdates(finished_clbk)
 	end)
 end
 
-function BLTUpdate:clbk_got_update_data_simple(finished_clbk, version_string)
-	local download_url = self.provider.download
-	local patchnotes_url = self.provider.patchnotes
-	if self.provider.format_url then
-		download_url = download_url and string.format(download_url, self.id) or download_url
-		patchnotes_url = patchnotes_url and string.format(patchnotes_url, self.id) or patchnotes_url
-	end
-
-	self._server_version = version_string
+function BLTUpdate:clbk_got_update_data_version(finished_clbk, version)
+	self._server_version = version
 	self._uses_hash = false
 	self._update_data = {
-		download_url = download_url,
-		patchnotes_url = patchnotes_url
+		download_url = self.provider:get_url("download"),
+		patchnotes_url = self.provider:get_url("patchnotes")
 	}
 
-	return self:_run_update_callback(finished_clbk, self.parent_mod.version ~= version_string)
+	return self:_run_update_callback(finished_clbk, self.parent_mod.version ~= version)
 end
 
 function BLTUpdate:clbk_got_update_data_default(finished_clbk, json_data)
@@ -229,7 +225,7 @@ function BLTUpdate:GetDisallowCallback()
 end
 
 function BLTUpdate:GetPatchNotes()
-	return self._update_data and self._update_data.patchnotes_url or self.provider.patchnotes
+	return self._update_data and self._update_data.patchnotes_url or self.provider:get_url("patchnotes")
 end
 
 function BLTUpdate:IsCritical()
@@ -246,7 +242,7 @@ function BLTUpdate:ViewPatchNotes()
 end
 
 function BLTUpdate:GetDownloadURL()
-	return self._update_data and self._update_data.download_url or self.provider.download
+	return self._update_data and self._update_data.download_url or self.provider:get_url("download")
 end
 
 function BLTUpdate:GetUpdateMiscData()

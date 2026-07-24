@@ -535,7 +535,7 @@ function BLTMod:GetDeveloperInfo()
 	local prehooks = self:GetPreHooks()
 	local persists = self:GetPersistScripts()
 	local entries = self:GetEntryScripts()
-	local native = self:GetNativeModules()
+	local modules = self:GetNativeModules()
 
 	append("Path:", self:GetPath())
 	append("Load Priority:", self:GetPriority())
@@ -579,12 +579,12 @@ function BLTMod:GetDeveloperInfo()
 		end
 	end
 
-	if table.size(native) < 1 then
+	if table.size(modules) < 1 then
 		append("No Native Modules")
 	else
 		append("Native Modules:")
-		for _, module in ipairs(native) do
-			append("   ", module.filename .. " (" .. module.platform .. ")")
+		for _, module in ipairs(modules) do
+			append("   ", module.platform, "->", module.filename)
 		end
 	end
 
