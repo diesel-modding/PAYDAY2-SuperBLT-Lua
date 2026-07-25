@@ -149,7 +149,10 @@ function BLT:GetOS()
 	if not info then
 		return "windows"
 	end
-	return info.platform == "mswindows" and "windows" or "linux"
+	if info.platform == "mswindows" or info.platform == "win64" then
+		return "windows"
+	end
+	return "linux"
 end
 
 function BLT:RunHookTable(hooks_table, path)
