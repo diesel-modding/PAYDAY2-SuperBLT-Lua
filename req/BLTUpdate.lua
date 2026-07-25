@@ -12,9 +12,9 @@ BLTUpdate.providers = {
 		patchnotes = "https://modworkshop.net/mod/%s?tab=changelog",
 		clbk_func = "clbk_got_update_data_version"
 	},
-	default = {
+	meta_file = {
 		get_url = function(self, type) return self[type] end,
-		clbk_func = "clbk_got_update_data_default"
+		clbk_func = "clbk_got_update_data_meta_file"
 	}
 }
 
@@ -35,7 +35,7 @@ function BLTUpdate:init(parent_mod, data)
 
 	-- Set up provider from legacy host data
 	local provider_data = data.host or {}
-	local provider_name = provider_data.provider or data.provider or "default"
+	local provider_name = provider_data.provider or data.provider or "meta_file"
 	provider_data.id = self.id
 	provider_data.meta = provider_data.meta or data.meta
 	provider_data.download = provider_data.download or data.download
@@ -76,10 +76,10 @@ end
 function BLTUpdate:CheckForUpdates(finished_clbk)
 	self._requesting_updates = true
 
-	dohttpreq(self.provider:get_url("meta"), function(data, http_id, request_info)
+	dohttpreq(self.provider:get_url("meta"), function(response_data, http_id, request_info)
 		self._requesting_updates = false
 
-		if not request_info.querySucceeded or string.is_nil_or_empty(data) then
+		if not request_info.querySucceeded or string.is_nil_or_empty(response_data) then
 			BLT:Log(LogLevel.WARN, string.format("[Updates] Could not retrieve update data for '%s' (%s)", self.id, self.name))
 			self._error = "Could not retrieve update data."
 			return self:_run_update_callback(finished_clbk, false, self._error)
@@ -87,34 +87,28 @@ function BLTUpdate:CheckForUpdates(finished_clbk)
 
 		BLT:Log(LogLevel.INFO, string.format("[Updates] Received update data for '%s' (%s)", self.id, self.name))
 
-		return self[self.provider.clbk_func](self, finished_clbk, data)
+		return self[self.provider.clbk_func](self, finished_clbk, response_data, request_info)
 	end)
 end
 
-function BLTUpdate:clbk_got_update_data_version(finished_clbk, version)
-	self._server_version = version
-	self._uses_hash = false
-	self._update_data = {
-		download_url = self.provider:get_url("download"),
-		patchnotes_url = self.provider:get_url("patchnotes")
-	}
+function BLTUpdate:clbk_got_update_data_version(finished_clbk, response_data, request_info)
+	self._server_version = response_data
 
-	return self:_run_update_callback(finished_clbk, self.parent_mod.version ~= version)
+	return self:_run_update_callback(finished_clbk, self.parent_mod.version ~= self._server_version)
 end
 
-function BLTUpdate:clbk_got_update_data_default(finished_clbk, json_data)
-	local server_data = json.decode(json_data)
+function BLTUpdate:clbk_got_update_data_meta_file(finished_clbk, response_data, request_info)
+	local meta_data = json.decode(response_data) or {}
 
-	for _, data in pairs(server_data or {}) do
+	for _, data in pairs(meta_data) do
 		if data.ident == self:GetId() then
 			self._update_data = data
-			if data.hash then -- Use hash to check
+			if data.hash then
 				self._server_hash = data.hash
 				self._uses_hash = true
-			elseif data.version then -- Use version
+			elseif data.version then
 				self._server_version = data.version
-				self._uses_hash = false
-				return self:_run_update_callback(finished_clbk, self.parent_mod.version ~= data.version) -- Request an update if the versions don't equal.
+				return self:_run_update_callback(finished_clbk, self.parent_mod.version ~= self._server_version)
 			end
 
 			local dat = { data, finished_clbk }
@@ -205,7 +199,7 @@ function BLTUpdate:GetServerVersion()
 end
 
 function BLTUpdate:UsesHash()
-	return self._uses_hash
+	return self._uses_hash or false
 end
 
 function BLTUpdate:GetInstallDirectory()
