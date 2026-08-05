@@ -183,23 +183,31 @@ function BLTMod:RunEntryScript(script_data)
 end
 
 function BLTMod:GetHooks()
-	return self.raw_data.hooks or {}
+	return table.collect(self.raw_data.hooks or {}, function(v)
+		return v.hook_id
+	end)
 end
 
 function BLTMod:GetPreHooks()
-	return self.raw_data.pre_hooks or {}
+	return table.collect(self.raw_data.pre_hooks or {}, function(v)
+		return v.hook_id
+	end)
 end
 
 function BLTMod:GetPersistScripts()
-	return self.raw_data.persist_scripts or {}
+	return self._persists or {}
 end
 
 function BLTMod:GetEntryScripts()
-	return self.raw_data.entry_scripts or {}
+	return table.collect(self.raw_data.entry_scripts or {}, function(v)
+		return v.script_path
+	end)
 end
 
 function BLTMod:GetNativeModules()
-	return self.raw_data.native_modules or {}
+	return table.collect(self.raw_data.native_modules or {}, function(v)
+		return v.filename
+	end)
 end
 
 function BLTMod:Errors()
@@ -531,11 +539,11 @@ function BLTMod:GetDeveloperInfo()
 		str = str .. "\n"
 	end
 
-	local hooks = self:GetHooks()
-	local prehooks = self:GetPreHooks()
-	local persists = self:GetPersistScripts()
-	local entries = self:GetEntryScripts()
-	local modules = self:GetNativeModules()
+	local hooks = self.raw_data.hooks or {}
+	local prehooks = self.raw_data.pre_hooks or {}
+	local persists = self.raw_data.persist_scripts or {}
+	local entries = self.raw_data.entry_scripts or {}
+	local modules = self.raw_data.native_modules or {}
 
 	append("Path:", self:GetPath())
 	append("Load Priority:", self:GetPriority())
