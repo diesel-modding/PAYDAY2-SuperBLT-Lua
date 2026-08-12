@@ -4,6 +4,20 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.5.0
+
+Work in progress changes for the 64-bit Beta
+
+- Added RequiredScriptType global (vojin154)
+- Added object filters for hook removal (vojin154)
+- Added support for parsing mods from `mod.json` or `supermod.xml` only
+- Added support for all formerly `mod.txt` exclusive values in `supermod.xml`
+- Added support for some formerly `supermod.xml` exclusive values in `mod.txt`
+- Added support for updating mods from ModWorkshop
+- Added a warning to NetworkHelper if data exceeds maximum message size
+- Improved Hooks handling
+- Removed old json parser
+
 ## v1.4.9
 
 - Fixed a crash when opening any modded menus
