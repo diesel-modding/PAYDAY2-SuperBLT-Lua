@@ -19,12 +19,12 @@ BLTUpdate.providers = {
 }
 
 function BLTUpdate:init(parent_mod, data)
-	if not parent_mod or not data or not data.identifier then
+	if not parent_mod or not data then
 		return false
 	end
 
 	self.parent_mod = parent_mod
-	self.id = data.identifier
+	self.id = data.identifier or parent_mod:GetId()
 	self.name = data.display_name or parent_mod:GetName()
 	self.dir = data.install_dir or parent_mod:GetDir()
 	self.folder = data.install_folder or parent_mod:GetId()
@@ -34,7 +34,7 @@ function BLTUpdate:init(parent_mod, data)
 	self.present_func = data.present_func
 
 	-- Set up provider from legacy host data
-	local provider_data = data.host or {}
+	local provider_data = type(data.host) == "table" and data.host or {}
 	local provider_name = provider_data.provider or data.provider or "meta_file"
 	provider_data.id = self.id
 	provider_data.meta = provider_data.meta or data.meta
