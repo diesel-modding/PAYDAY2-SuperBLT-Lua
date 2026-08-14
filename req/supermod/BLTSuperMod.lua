@@ -156,7 +156,7 @@ function BLTSuperMod:_add_keybind(tag, scope)
 end
 
 function BLTSuperMod:_add_assets(tag, scope)
-	self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
+	self._mod.raw_data.needs_restart = self._mod.raw_data.needs_restart == nil and true or self._mod.raw_data.needs_restart
 
 	table.insert(self._setup_callbacks, function()
 		if not self._mod:IsEnabled() then
@@ -283,7 +283,9 @@ function BLTSuperMod._recurse_xml(xml, parent_scope, callbacks)
 end
 
 function BLTSuperMod._convert_to_boolean(val)
-	return tostring(val):lower() == "true"
+	if val then
+		return tostring(val):lower() == "true"
+	end
 end
 
 function BLTSuperMod._convert_to_number(val)
