@@ -158,7 +158,18 @@ class XMLTweakApplier {
 								  // usually good enough for pointing out problematic search
 								  // nodes
 			}
-			dive_tweak_elem(xml.ensure_element_next, search_node, search_node.first_child.ensure_element_next, target_node, info)
+			// Skip XML declaration nodes in the base xml as well as in search
+			// If there is an XML declaration, it will be parsed as the root node of the document by mxml,
+			// so we can simply skip it and go to the first child
+			var first_xml_element = xml.ensure_element_next
+			if (first_xml_element.name.startsWith("?xml") && first_xml_element.first_child != null) {
+				first_xml_element = first_xml_element.first_child.ensure_element_next
+			}
+			var first_search_element = search_node.first_child.ensure_element_next
+			if (first_search_element.name.startsWith("?xml") && first_search_element.next_element != null) {
+				first_search_element = first_search_element.next_element
+			}
+			dive_tweak_elem(first_xml_element, search_node, first_search_element, target_node, info)
 
 			if(info["count"] == 0) {
 				Logger.log("Warning: Failed to apply tweak %(tweak_index) of %(tweaks.count) in %(tweak_path) for %(name).%(ext)")
