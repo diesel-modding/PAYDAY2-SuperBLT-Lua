@@ -24,7 +24,7 @@ function BLTUpdate:init(parent_mod, data)
 	end
 
 	self.parent_mod = parent_mod
-	self.id = data.identifier or parent_mod:GetId()
+	self.id = data.identifier and tostring(data.identifier) or parent_mod:GetId()
 	self.name = data.display_name or parent_mod:GetName()
 	self.dir = data.install_dir or parent_mod:GetDir()
 	self.folder = data.install_folder or parent_mod:GetId()
