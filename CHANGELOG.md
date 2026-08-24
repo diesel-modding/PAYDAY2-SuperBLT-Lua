@@ -4,9 +4,14 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
-## v1.5.0
+## v1.5.1
 
-Work in progress changes for the 64-bit Beta
+- Improved handling of XML declarations for XML tweaking
+- Fixed automatic restart requirement detection
+- Fixed update check for number based identifiers (Bo98)
+- Fixed minor json parser issues (Bo98)
+
+## v1.5.0
 
 - Added RequiredScriptType global (vojin154)
 - Added object filters for hook removal (vojin154)
