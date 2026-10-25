@@ -214,10 +214,11 @@ end
 
 -- Asset system - independent of any object
 _flush_assets = function(dres)
-	dres = dres or managers and managers.dyn_resource
-	if not dres then
-		return
+	if not Idstring then
+		return -- Skip if we don't have core classes yet
 	end
+
+	dres = dres or managers and managers.dyn_resource
 
 	for id, asset in pairs(_dynamic_unloaded_assets) do
 		local ext = Idstring(asset.extension)
@@ -229,17 +230,21 @@ _flush_assets = function(dres)
 			asset.xml_convert._done = true
 		end
 
-		if not io.file_is_readable(path) then
-			error("Cannot load unreadable asset " .. path)
-		end
-
 		if not asset._entry_created then
+			if not io.file_is_readable(path) then
+				error("Cannot load unreadable asset " .. path)
+			end
+
 			blt.ignoretweak(dbpath, ext)
 			BLT.AssetManager:CreateEntry(dbpath, ext, path)
 			asset._entry_created = true
 		end
 
-		if asset.dyn_package and not asset._targeted_package then
+		if not asset.dyn_package or asset._targeted_package then
+			 -- We're done with this asset, it will be loaded manually or doesn't need loading
+			_dynamic_unloaded_assets[id] = nil
+		elseif dres then
+			-- If DynamicResourceManager exists, load the asset
 			asset._targeted_package = dres.DYN_RESOURCES_PACKAGE
 
 			_currently_loading_assets[asset] = {}
@@ -258,10 +263,10 @@ _flush_assets = function(dres)
 					end
 				end
 			end)
+
+			_dynamic_unloaded_assets[id] = nil
 		end
 	end
-
-	_dynamic_unloaded_assets = {}
 end
 
 Hooks:Add("DynamicResourceManagerCreated", "BLTAssets.DynamicResourceManagerCreated", function(...)
