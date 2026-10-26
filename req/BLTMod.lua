@@ -539,6 +539,8 @@ function BLTMod:GetDeveloperInfo()
 		str = str .. "\n"
 	end
 
+	local dependencies = self.dependencies or {}
+	local keybinds = self.raw_data.keybinds or {}
 	local hooks = self.raw_data.hooks or {}
 	local prehooks = self.raw_data.pre_hooks or {}
 	local persists = self.raw_data.persist_scripts or {}
@@ -548,8 +550,26 @@ function BLTMod:GetDeveloperInfo()
 	append("Path:", self:GetPath())
 	append("Load Priority:", self:GetPriority())
 	append("Version:", self:GetVersion())
-	append("BLT-Version:", self:GetBLTVersion())
-	append("Disablable:", not self:IsUndisablable())
+	append("Library:", self:IsLibrary())
+	append("Needs Restart:", self.needs_restart == nil and "N/A" or self.needs_restart)
+
+	if table.size(dependencies) < 1 then
+		append("No Dependencies")
+	else
+		append("Dependencies:")
+		for id, data in pairs(dependencies) do
+			append("   ", data.name or id)
+		end
+	end
+
+	if table.size(keybinds) < 1 then
+		append("No Keybinds")
+	else
+		append("Keybinds:")
+		for _, keybind in ipairs(keybinds) do
+			append("   ", keybind.keybind_id, "->", keybind.script_path)
+		end
+	end
 
 	if table.size(hooks) < 1 then
 		append("No Hooks")
