@@ -82,10 +82,10 @@ function BLTSuperMod:_load_xml(xml, parent_scope)
 		native_module = function(tag, scope) self:_add_native_module(tag, scope) end,
 		-- These tags are used by the Wren-based XML Tweaker
 		wren = function(tag, scope)
-			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
+			self._mod.raw_data.needs_restart = self._mod.raw_data.needs_restart == nil and true or self._mod.raw_data.needs_restart
 		end,
 		tweak = function(tag, scope)
-			self._mod.needs_restart = self._mod.needs_restart == nil and true or self._mod.needs_restart
+			self._mod.raw_data.needs_restart = self._mod.raw_data.needs_restart == nil and true or self._mod.raw_data.needs_restart
 		end
 	})
 end
