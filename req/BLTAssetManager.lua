@@ -2,13 +2,13 @@
 ---@field new fun(self):BLTAssetManager
 BLTAssetManager = BLTAssetManager or blt_class(BLTModule)
 BLTAssetManager.__type = "BLTAssetManager"
+BLTAssetManager._created_entries = {}
 
 function BLTAssetManager:init()
 	BLTAssetManager.super.init(self)
 
 	self._recode = {}
 	self._loaded_defaults = false
-	self._created_entries = {}
 end
 
 -- Idstring isn't available while BLT is loading, so deferr making the recoding table until the first asset it loaded
