@@ -4,6 +4,12 @@ This lists the changes between different versions of the SuperBLT basemod,
 the changes for the DLL are listed in their own changelog.
 Contributors other than maintainers are listed in parenthesis after specific changes.
 
+## v1.5.2
+
+- Adjusted `supermod.xml` asset loading to create asset entries as early as possible
+- Fixed issues with detection whether a mod needs to be restarted after enabling/disabling
+- Improved developer information in mod view
+
 ## v1.5.1
 
 - Improved handling of XML declarations for XML tweaking
