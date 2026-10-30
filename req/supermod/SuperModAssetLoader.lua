@@ -275,3 +275,10 @@ Hooks:Add("DynamicResourceManagerCreated", "BLTAssets.DynamicResourceManagerCrea
 		BLT:Log(LogLevel.ERROR, "[Assets] Error in asset loader: " .. tostring(err))
 	end
 end)
+
+Hooks:Add("SuperBLTPreEntry", "BLTAssets.SuperBLTPreEntry", function()
+	local success, err = pcall(_flush_assets)
+	if not success then
+		BLT:Log(LogLevel.ERROR, "[Assets] Error in asset loader: " .. tostring(err))
+	end
+end)
