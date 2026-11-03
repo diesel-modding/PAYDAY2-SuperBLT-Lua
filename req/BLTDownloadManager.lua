@@ -280,6 +280,12 @@ function BLTDownloadManager:clbk_download_finished(data, http_id, request_info)
 		BLT:Log(LogLevel.INFO, string.format("[Downloads] Finished '%s'", download_name))
 		download.state = "complete"
 		cleanup(true)
+
+		-- Mark parent mod as updated and check if we need a restart
+		if download.update:GetParentMod() and not download.update:IsInstall() then
+			download.update:GetParentMod()._updated = true
+			BLT.Mods:CheckRestartNeeded()
+		end
 	end
 
 	download.coroutine:animate(save)

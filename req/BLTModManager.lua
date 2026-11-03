@@ -172,7 +172,7 @@ end
 function BLTModManager:CheckRestartNeeded()
 	local needs_restart = {}
 	for _, mod in pairs(self:Mods()) do
-		if mod.needs_restart and mod:IsEnabled() ~= mod:WasEnabledAtStart() then
+		if mod.needs_restart and (mod:IsEnabled() ~= mod:WasEnabledAtStart() or mod:WasUpdated()) then
 			table.insert(needs_restart, mod:GetName())
 		end
 	end

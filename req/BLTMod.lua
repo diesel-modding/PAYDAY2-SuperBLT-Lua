@@ -239,6 +239,10 @@ function BLTMod:WasEnabledAtStart()
 	return self._enabled
 end
 
+function BLTMod:WasUpdated()
+	return self._updated
+end
+
 function BLTMod:SetEnabled(enable, force)
 	self.enabled = self:IsUndisablable() or enable
 	if force then
