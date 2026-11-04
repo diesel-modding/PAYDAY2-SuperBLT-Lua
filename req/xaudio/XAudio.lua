@@ -30,10 +30,24 @@ blt.xaudio.setworldscale(100)
 -- Delete any existing sources from the last heist/menu
 blt.xaudio.reset()
 
+local _device_check_t = 0
+local function check_device(dt)
+	if not blt.xaudio.checkdevice then
+		return
+	end
+	_device_check_t = _device_check_t + dt
+	if _device_check_t < 1 then
+		return
+	end
+	_device_check_t = 0
+	blt.xaudio.checkdevice()
+end
+
 local function update(t, dt, paused)
 	for _, src in pairs(XAudio._sources) do
 		src:update(t, dt, paused)
 	end
+	check_device(dt)
 end
 
 Hooks:Add("MenuUpdate", "Base_XAudio_MenuSetupUpdate", function(t, dt)
