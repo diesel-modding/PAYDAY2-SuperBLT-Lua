@@ -137,19 +137,24 @@ function Hooks:PreHook(object, func, id, pre_call)
 		return
 	end
 
+	local source = Utils:GetCallOrigin()
+
 	if not self:_ChkCreateTableStructure(object, func) then
 		for k, v in pairs(self._function_hooks[object][func].overrides.pre) do
 			if v.id == id then
+				if source ~= v.source then
+					BLT:Log(LogLevel.ERROR, string.format("[Hooks] Pre hook with ID '%s' (%s) already defined in %s", tostring(id), tostring(source), tostring(v.source)))
+				end
 				return
 			end
 		end
 	end
 
-	local func_tbl = {
+	table.insert(self._function_hooks[object][func].overrides.pre, {
 		id = id,
+		source = source,
 		func = pre_call
-	}
-	table.insert(self._function_hooks[object][func].overrides.pre, func_tbl)
+	})
 end
 
 ---Removes a prehook and prevents it from being run
@@ -182,19 +187,24 @@ function Hooks:PostHook(object, func, id, post_call)
 		return
 	end
 
+	local source = Utils:GetCallOrigin()
+
 	if not self:_ChkCreateTableStructure(object, func) then
 		for k, v in pairs(self._function_hooks[object][func].overrides.post) do
 			if v.id == id then
+				if source ~= v.source then
+					BLT:Log(LogLevel.ERROR, string.format("[Hooks] Post hook with ID '%s' (%s) already defined in %s", tostring(id), tostring(source), tostring(v.source)))
+				end
 				return
 			end
 		end
 	end
 
-	local func_tbl = {
+	table.insert(self._function_hooks[object][func].overrides.post, {
 		id = id,
+		source = source,
 		func = post_call
-	}
-	table.insert(self._function_hooks[object][func].overrides.post, func_tbl)
+	})
 end
 
 ---Removes a posthook and prevents it from being run  

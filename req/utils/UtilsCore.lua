@@ -71,7 +71,7 @@ function Utils.PrintTable(tbl, maxDepth)
 	local output = nil
 
 	if type(tbl) == "table" then
-		output = {"\n"} -- Start the output on a new line. Doing this here to avoid a possibly large copy later.
+		output = { "\n" } -- Start the output on a new line. Doing this here to avoid a possibly large copy later.
 		local has = {}
 		local tabs = ""
 		local depth = 0
@@ -105,7 +105,7 @@ function Utils.DoSaveTable(tbl, cmp, fileName, fileIsOpen, preText)
 		for k, v in pairs(tbl) do
 			if type(v) == "table" and not cmp[v] then
 				cmp[v] = true
-				file:write(preText .. string.format("[\"%s\"] -> table", tostring (k)) .. "\n")
+				file:write(preText .. string.format("[\"%s\"] -> table", tostring(k)) .. "\n")
 				Utils.DoSaveTable(v, cmp, fileName, file, preText .. "\t")
 			else
 				file:write(preText .. string.format("\"%s\" -> %s", tostring(k), tostring(v)) .. "\n")
@@ -295,7 +295,7 @@ end
 ---@param ... any @List of values
 ---@return any @First value that isn't `nil`, or `nil` if all of them are
 function Utils:FirstNonNil(...)
-	for _, v in pairs({...}) do
+	for _, v in pairs({ ... }) do
 		if v ~= nil then
 			return v
 		end
@@ -308,7 +308,7 @@ end
 ---@return any @The value found in the nested table, or `nil` if any key in the sequence is not found
 function Utils:GetNestedValue(tbl, ...)
 	local value = tbl
-	for _, v in ipairs({...}) do
+	for _, v in ipairs({ ... }) do
 		if type(value) ~= "table" then
 			return
 		end
@@ -324,7 +324,7 @@ end
 ---@param ... any @A sequence of keys to traverse the nested table
 ---@return boolean @`true` if the value was set, or `false` if any key in the sequence doesn't hold a table value
 function Utils:SetNestedValue(tbl, val, ...)
-	local args = {...}
+	local args = { ... }
 	if #args == 0 then
 		return false
 	end
@@ -358,6 +358,15 @@ function Utils:IsInstanceOf(object, c)
 		meta = meta.super
 	end
 	return false
+end
+
+---Gets the file and line number of the file this function is called from at a certain stack level  
+---Each stack level goes back one function call in the call hierarchy with level 1 being this function itself, level 2 being the function this function was called from, and so on
+---@param level? number @Stack level, defaults to 3 (the caller of this function's caller)
+---@return string @Source file and line number of the call origin
+function Utils:GetCallOrigin(level)
+	local info = debug.getinfo(level or 3, "Sl")
+	return string.format("%s:%s", info.source, info.currentline)
 end
 
 
