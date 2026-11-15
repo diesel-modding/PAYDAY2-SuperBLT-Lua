@@ -72,8 +72,8 @@ function BLT:Log(level, ...)
 	log(table.concat(out, " "))
 end
 
-function BLT:DeprecationWarning(name, level)
-	local source = Utils:GetCallOrigin(level)
+function BLT:DeprecationWarning(name)
+	local source = Utils:GetCallOrigin(4)
 	BLT:Log(LogLevel.WARN, string.format("%s is deprecated and will be removed in a future version of SuperBLT (%s)", name, source))
 end
 

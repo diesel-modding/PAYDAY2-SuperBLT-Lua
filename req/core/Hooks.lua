@@ -132,18 +132,18 @@ end
 ---@param id string @Unique name for this prehook
 ---@param pre_call function @Function to be called before `func` on `object`
 function Hooks:PreHook(object, func, id, pre_call)
+	local source = Utils:GetCallOrigin()
+
 	if not object or type(object[func]) ~= "function" or type(pre_call) ~= "function" then
-		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not pre hook function '%s' (%s)", tostring(func), tostring(id)))
+		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not create pre hook '%s' on function '%s' (%s)", tostring(id), tostring(func), tostring(source)))
 		return
 	end
-
-	local source = Utils:GetCallOrigin()
 
 	if not self:_ChkCreateTableStructure(object, func) then
 		for k, v in pairs(self._function_hooks[object][func].overrides.pre) do
 			if v.id == id then
 				if source ~= v.source then
-					BLT:Log(LogLevel.ERROR, string.format("[Hooks] Pre hook with ID '%s' (%s) already defined in %s", tostring(id), tostring(source), tostring(v.source)))
+					BLT:Log(LogLevel.ERROR, string.format("[Hooks] Pre hook '%s' (%s) already defined in %s", tostring(id), tostring(source), tostring(v.source)))
 				end
 				return
 			end
@@ -182,18 +182,18 @@ end
 ---@param id string @Unique name for this posthook
 ---@param post_call function @Function to be called after `func` on `object`
 function Hooks:PostHook(object, func, id, post_call)
+	local source = Utils:GetCallOrigin()
+
 	if not object or type(object[func]) ~= "function" or type(post_call) ~= "function" then
-		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not post hook function '%s' (%s)", tostring(func), tostring(id)))
+		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not create post hook '%s' on function '%s' (%s)", tostring(id), tostring(func), tostring(source)))
 		return
 	end
-
-	local source = Utils:GetCallOrigin()
 
 	if not self:_ChkCreateTableStructure(object, func) then
 		for k, v in pairs(self._function_hooks[object][func].overrides.post) do
 			if v.id == id then
 				if source ~= v.source then
-					BLT:Log(LogLevel.ERROR, string.format("[Hooks] Post hook with ID '%s' (%s) already defined in %s", tostring(id), tostring(source), tostring(v.source)))
+					BLT:Log(LogLevel.ERROR, string.format("[Hooks] Post hook '%s' (%s) already defined in %s", tostring(id), tostring(source), tostring(v.source)))
 				end
 				return
 			end
@@ -231,7 +231,8 @@ end
 ---@param override function @Function to replace the original function `func` with
 function Hooks:OverrideFunction(object, func, override)
 	if not object or type(override) ~= "function" then
-		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not override function '%s'", tostring(func)))
+		local source = Utils:GetCallOrigin()
+		BLT:Log(LogLevel.ERROR, string.format("[Hooks] Could not override function '%s' (%s)", tostring(func), tostring(source)))
 		return
 	end
 

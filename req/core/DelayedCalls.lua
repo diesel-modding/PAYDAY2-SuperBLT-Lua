@@ -32,7 +32,8 @@ end
 ---@param func function @Function to call after the time runs out
 function DelayedCalls:Add(id, time, func)
 	if not id or type(time) ~= "number" or type(func) ~= "function" then
-		BLT:Log(LogLevel.ERROR, string.format("[DelayedCalls] Could not add call '%s'", id))
+		local source = Utils:GetCallOrigin()
+		BLT:Log(LogLevel.ERROR, string.format("[DelayedCalls] Could not add call '%s' (%s)", tostring(id), tostring(source)))
 		return
 	end
 
